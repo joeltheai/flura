@@ -16,20 +16,24 @@
     resonance: { label: 'resonance', min: 0, max: 100, step: 1, format: value => `${value}%` },
     vibratoDepth: { label: 'vibrato depth', min: 0, max: 20, step: .1, format: value => `${Number(value.toFixed(1))}ct` },
     vibratoRate: { label: 'vibrato rate', min: .1, max: 12, step: .1, format: value => `${Number(value.toFixed(1))}Hz` },
-    attack: { label: 'attack', min: .001, max: 2, step: .001, log: true, format: seconds },
-    decay: { label: 'decay', min: .001, max: 2, step: .001, log: true, format: seconds },
+    attack: { label: 'attack', min: 0, max: 2, step: .001, log: true, format: seconds },
+    decay: { label: 'decay', min: 0, max: 2, step: .001, log: true, format: seconds },
     sustain: { label: 'sustain', min: 0, max: 1, step: .01, format: value => `${Math.round(value * 100)}%` },
-    release: { label: 'release', min: .005, max: 3, step: .001, log: true, format: seconds },
+    release: { label: 'release', min: 0, max: 3, step: .001, log: true, format: seconds },
   };
   const envelopeKeys = ['attack', 'decay', 'sustain', 'release'];
   const synthKeys = Object.keys(specs).filter(key => !envelopeKeys.includes(key));
-  const span = (value, max) => 30 + 60 * (value / max) ** .35;
-  const timeFromSpan = (value, max) => max * clamp((value - 30) / 60, 0, 1) ** (1 / .35);
+  const fromSlider = (value, spec) => spec.min === 0
+    ? .01 * Math.expm1(value / 1000 * Math.log1p(spec.max / .01))
+    : spec.min * (spec.max / spec.min) ** (value / 1000);
+  const toSlider = (value, spec) => spec.min === 0
+    ? Math.log1p(value / .01) / Math.log1p(spec.max / .01) * 1000
+    : Math.log(value / spec.min) / Math.log(spec.max / spec.min) * 1000;
 
   window.FluraSynthControls = instrument => {
     const inputs = new Map(), outputs = new Map();
     const envelope = document.querySelector('#envelope');
-    let points = [];
+    let points = [], pixelsPerSecond;
     function setParam(key, value) {
       const spec = specs[key];
       const rounded = Number((Math.round(value / spec.step) * spec.step).toFixed(4));
@@ -47,7 +51,7 @@
         input.min = spec.log ? 0 : spec.min; input.max = spec.log ? 1000 : spec.max;
         input.step = spec.log ? 1 : spec.step;
         input.addEventListener('input', () => {
-          const value = spec.log ? spec.min * (spec.max / spec.min) ** (+input.value / 1000) : +input.value;
+          const value = spec.log ? fromSlider(+input.value, spec) : +input.value;
           setParam(key, value);
         });
         input.addEventListener('dblclick', () => setParam(key, instrument.constructor.DEFAULTS[key]));
@@ -72,7 +76,16 @@
     });
     function drawEnvelope() {
       const s = instrument.synth;
-      const a = 20 + span(s.attack, 2), d = a + span(s.decay, 2), hold = d + 55, r = hold + span(s.release, 3);
+      // Sustain has no fixed duration; show a half-second held-note example.
+      // Every timed segment uses the same scale, with no minimum visual width.
+      const holdTime = .5;
+      const duration = s.attack + s.decay + holdTime + s.release;
+      const timeRange = Math.max(1, Math.ceil(duration * 2) / 2);
+      pixelsPerSecond = 320 / timeRange;
+      const a = 20 + s.attack * pixelsPerSecond;
+      const d = a + s.decay * pixelsPerSecond;
+      const hold = d + holdTime * pixelsPerSecond;
+      const r = hold + s.release * pixelsPerSecond;
       const y = 172 - s.sustain * 144;
       points = [
         { key: 'attack', x: a, y: 28 }, { key: 'decay', x: d, y },
@@ -87,14 +100,16 @@
         handle.setAttribute('transform', `translate(${point.x} ${point.y})`);
         handle.setAttribute('aria-valuemin', spec.min); handle.setAttribute('aria-valuemax', spec.max);
         handle.setAttribute('aria-valuenow', s[point.key]); handle.setAttribute('aria-valuetext', spec.format(s[point.key]));
-        document.querySelector(`#env-label-${point.key}`).setAttribute('x', ((index ? points[index - 1].x : 20) + point.x) / 2);
+        const label = document.querySelector(`#env-label-${point.key}`);
+        label.setAttribute('x', ((index ? points[index - 1].x : 20) + point.x) / 2);
+        label.toggleAttribute('hidden', point.key !== 'sustain' && s[point.key] === 0);
       });
     }
     function sync() {
       const s = instrument.synth;
       for (const [key, input] of inputs) {
         const spec = specs[key], value = s[key];
-        input.value = spec.log ? Math.log(value / spec.min) / Math.log(spec.max / spec.min) * 1000 : value;
+        input.value = spec.log ? toSlider(value, spec) : value;
         input.setAttribute('aria-valuetext', spec.format(value));
         outputs.get(key).value = spec.format(value);
       }
@@ -128,7 +143,7 @@
       const rect = envelope.getBoundingClientRect();
       const x = (event.clientX - rect.left) * 360 / rect.width, y = (event.clientY - rect.top) * 210 / rect.height;
       const point = points.reduce((closest, item) => Math.hypot(item.x - x, item.y - y) < Math.hypot(closest.x - x, closest.y - y) ? item : closest);
-      drag = { key: point.key, pointer: event.pointerId, x: event.clientX, y: event.clientY, value: instrument.synth[point.key], sustain: instrument.synth.sustain };
+      drag = { key: point.key, pointer: event.pointerId, x: event.clientX, y: event.clientY, value: instrument.synth[point.key], sustain: instrument.synth.sustain, scale: pixelsPerSecond };
       envelope.setPointerCapture(event.pointerId); event.preventDefault();
     });
     envelope.addEventListener('pointermove', event => {
@@ -137,8 +152,7 @@
       const dx = (event.clientX - drag.x) * 360 / rect.width, dy = (event.clientY - drag.y) * 210 / rect.height;
       if (drag.key === 'sustain') setParam('sustain', drag.value - dy / 144);
       else {
-        const max = drag.key === 'release' ? 3 : 2;
-        setParam(drag.key, timeFromSpan(span(drag.value, max) + dx, max));
+        setParam(drag.key, drag.value + dx / drag.scale);
         if (drag.key === 'decay') setParam('sustain', drag.sustain - dy / 144);
       }
     });

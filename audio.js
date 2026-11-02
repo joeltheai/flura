@@ -257,13 +257,17 @@ Instrument.DEFAULTS = Object.freeze({
   attack: .005, decay: .24, sustain: .08, release: .42,
 });
 Instrument.attackDecayLevel = (elapsed, voice) => {
-  if (elapsed <= 0) return 0;
-  if (elapsed < voice.a) return elapsed / voice.a;
-  if (elapsed < voice.a + voice.d) return 1 + (voice.s - 1) * (elapsed - voice.a) / voice.d;
+  if (elapsed < 0) return 0;
+  if (voice.a > 0 && elapsed < voice.a) return elapsed / voice.a;
+  if (voice.d > 0 && elapsed < voice.a + voice.d) return 1 + (voice.s - 1) * (elapsed - voice.a) / voice.d;
   return voice.s;
 };
-Instrument.envelopeLevel = (voice, time) => time >= voice.off
-  ? voice.releaseFrom * Math.max(0, 1 - (time - voice.off) / voice.r)
-  : Instrument.attackDecayLevel(time - voice.t, voice);
+Instrument.envelopeLevel = (voice, time) => {
+  if (time >= voice.off) {
+    if (voice.r <= 0) return 0;
+    return voice.releaseFrom * Math.max(0, 1 - (time - voice.off) / voice.r);
+  }
+  return Instrument.attackDecayLevel(time - voice.t, voice);
+};
 window.FluraInstrument = Instrument;
 })();
