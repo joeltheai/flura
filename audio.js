@@ -15,6 +15,15 @@ class Instrument extends EventTarget {
     this.generation = 0; this.starting = false;
   }
   async ready() {
+    // iOS otherwise treats Web Audio as ambient sound, which follows Silent Mode.
+    // Request music playback during the same tap that starts/resumes audio.
+    try {
+      if (navigator.audioSession && navigator.audioSession.type !== 'playback') {
+        navigator.audioSession.type = 'playback';
+      }
+    } catch {
+      // Older browsers may expose the API without allowing this session type.
+    }
     if (!this.context) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) throw new Error('This browser does not support Web Audio.');
