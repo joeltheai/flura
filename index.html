@@ -1,28 +1,1380 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hello World</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f3ec" />
+  <meta name="description" content="A little garden of sound. Play chords, draw an arpeggio, and grow a floating 3D flower." />
+  <title>flura — a little garden of sound</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Ctext%20y%3D%2226%22%20font-size%3D%2228%22%3E%E2%9C%B3%3C%2Ftext%3E%3C%2Fsvg%3E" />
   <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
-    }
-    h1 {
-      font-size: clamp(2rem, 8vw, 5rem);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
+:root{--paper:#f5f3ec;--ink:#39463b;--muted:#8a8e80;--line:#dddfd3;--green:#6c8261;--green-light:#e7eadf;--accent:#d7826e;--serif:Georgia,'Times New Roman',serif;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#e9e9e0;font-synthesis:none;color-scheme:light}
+*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button,a,input,select{-webkit-tap-highlight-color:transparent}button{cursor:pointer;color:inherit;background:none;border:0}a{color:inherit;text-decoration:none}button:disabled{opacity:.3;cursor:default}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:4px}button,input,select{touch-action:manipulation}button{padding:0}svg{display:block}button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}[hidden]{display:none!important}
+.app-shell{width:100%;max-width:480px;height:100svh;height:100dvh;min-height:0;margin:0 auto;background:var(--paper);display:grid;grid-template-rows:auto auto minmax(0,1fr) 37px auto;position:relative;overflow:hidden}
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:23px 28px 20px;padding-top:max(23px,env(safe-area-inset-top));gap:14px}.wordmark{font-family:var(--serif);font-size:35px;letter-spacing:-2px;display:flex;align-items:center;line-height:1;gap:8px}.wordmark svg{width:29px;height:29px;color:var(--accent)}.wordmark-dot{color:var(--accent);margin-left:-8px}.header-note{color:var(--muted);font-size:10px;letter-spacing:.3px}
+.view-tabs{display:grid;grid-template-columns:repeat(3,1fr);padding:0 28px;border-bottom:1px solid var(--line);gap:19px}.view-tabs button{height:47px;font-size:12px;text-align:left;color:var(--muted);position:relative;white-space:nowrap}.view-tabs button span{font-size:9px;margin-right:7px;opacity:.7;font-variant-numeric:tabular-nums}.view-tabs button[aria-current]{color:var(--ink)}.view-tabs button[aria-current]:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--green)}
+.carousel{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;outline-offset:-3px;min-height:0}.carousel::-webkit-scrollbar,.view::-webkit-scrollbar{display:none}.view{flex:0 0 100%;width:100%;min-width:0;padding:27px 28px 14px;overflow-y:auto;scroll-snap-align:start;scroll-snap-stop:always;scrollbar-width:none;overscroll-behavior-y:contain}.view-heading .eyebrow{color:var(--green);font-size:9px;text-transform:uppercase;letter-spacing:1.65px;display:flex;align-items:center;gap:8px;margin:0 0 12px}.little-star{font-size:17px;font-weight:normal}.view-heading h1{font-family:var(--serif);font-weight:normal;font-size:32px;letter-spacing:-1.3px;margin:0 0 10px;line-height:1.12}.view-heading>p:last-child{font-size:11px;color:var(--muted);line-height:1.6;margin:0}.wheel-wrap{width:min(100%,340px);margin:22px auto 0;position:relative;aspect-ratio:1}.wheel-wrap>svg{width:100%;height:100%;overflow:visible}#wheel path{fill:#efeee5;stroke:var(--paper);stroke-width:2.5;cursor:pointer;transition:fill .18s}#wheel path[data-minor="1"]{fill:#e7e9de}#wheel path:hover{fill:#dce2d2}#wheel path[aria-pressed="true"]{fill:var(--green)}#wheel path:focus-visible{outline:none;stroke:var(--accent);stroke-width:3}#wheel text{fill:var(--ink);font-family:var(--serif);font-size:18px;text-anchor:middle;dominant-baseline:central;pointer-events:none}#wheel text.minor{font-size:13px;fill:#7b8470}#wheel text.selected{fill:var(--paper)}#wheel .wheel-outline{fill:none;stroke:#d6d9cb;stroke-width:.65;pointer-events:none}.chord-center{position:absolute;left:32%;top:32%;width:36%;height:36%;border:1px solid var(--line);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:var(--paper)}#chord-name{font-family:var(--serif);font-size:37px;letter-spacing:-2px;line-height:1.1}#chord-quality{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--green)}.center-hint{font-size:8px;color:var(--muted);margin-top:9px}.chord-center.auditioning{box-shadow:0 0 0 7px #6c82610c;border-color:var(--green)}.wheel-legend{display:flex;gap:17px;justify-content:center;color:var(--muted);font-size:9px;margin:9px 0 25px}.wheel-legend span{display:flex;align-items:center;gap:6px}.wheel-legend i{width:5px;height:5px;border-radius:50%;background:#a8b49a}.wheel-legend span:last-child i{background:#d1d6c5}
+.chord-options{display:grid;grid-template-columns:1fr 1fr;gap:18px}.select-field{display:flex;flex-direction:column;min-width:0;gap:8px}.select-field>span{color:var(--muted);font-size:10px}.select-field select{border:0;border-bottom:1px solid var(--line);border-radius:0;color:var(--ink);background:transparent;appearance:none;padding:0 22px 12px 0;font-size:12px;min-height:30px;width:100%;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='m2 2 4 4 4-4' stroke='%238a8e80'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 3px top 4px}.progression-section{margin-top:28px}.section-label{display:flex;align-items:center;justify-content:space-between;font-size:10px;margin-bottom:12px}.section-label>span{color:var(--muted)}#capture{font-size:10px;display:flex;align-items:center;gap:6px;min-height:28px}.record-dot{width:6px;height:6px;border:1px solid var(--accent);border-radius:50%}#capture[aria-pressed=true]{color:var(--accent)}#capture[aria-pressed=true] .record-dot{background:var(--accent)}.progression-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.progression-slots button{height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:1px solid var(--line);border-radius:5px}.progression-slots span{font-size:8px;color:var(--muted)}.progression-slots strong{font-size:13px;font-weight:normal;color:var(--muted)}.progression-slots .filled{background:#eceee4;border-color:#d3daca}.progression-slots .filled strong{color:var(--ink);font-family:var(--serif);font-size:16px}.progression-slots .active{border-color:var(--green);box-shadow:inset 0 -2px var(--green)}.progression-slots .record-next{border:1px dashed var(--accent)}.progression-bottom{display:flex;justify-content:space-between;align-items:center;gap:6px;min-height:36px;font-size:9px;color:var(--muted)}#clear-progression{font-size:9px;text-decoration:underline;min-height:32px;padding-left:10px}
+.arp-topline{display:grid;grid-template-columns:1fr 75px 34px;gap:20px;align-items:end;margin:27px 0 23px}.round-button{border:1px solid var(--line);width:34px;height:34px;display:grid;place-items:center;border-radius:50%;color:#818b76}.round-button svg{width:16px;height:16px}#arp-bypass{margin-bottom:5px;border-color:#bbc6ae;color:var(--green)}#arp-bypass[aria-pressed=true]{color:var(--muted);border-color:var(--line)}.lane-tabs{display:grid;grid-template-columns:repeat(4,1fr);padding:4px;background:#ebece2;border-radius:6px;gap:3px}.lane-tabs button{height:34px;border-radius:4px;font-size:10px;color:var(--muted)}.lane-tabs button[aria-selected=true]{color:var(--ink);background:var(--paper);box-shadow:0 1px 3px #3840320a}.graph-caption{font-size:9px;color:var(--muted);display:flex;justify-content:space-between;margin:22px 0 12px}.step-graph{height:183px;display:flex;gap:5px;position:relative;align-items:stretch;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to top,transparent 0 calc(25% - 1px),#dde0d080 calc(25% - 1px) 25%);touch-action:none;user-select:none}.step-cell{flex:1;min-width:0;position:relative;cursor:ns-resize;touch-action:none;border-radius:3px 3px 0 0;outline-offset:1px}.step-bar{position:absolute;bottom:0;left:0;right:0;min-height:4px;background:#a3b093;border-radius:3px 3px 0 0;pointer-events:none;transition:background .1s}.step-bar:before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:#7c916a;border-radius:2px}.step-value{position:absolute;top:7px;left:0;right:0;text-align:center;color:#4f6043;font-size:9px;font-variant-numeric:tabular-nums;pointer-events:none}.step-cell.playing .step-bar{background:var(--green)}.step-cell.playing .step-value{color:#fff}.step-cell.muted .step-bar{opacity:.2}.step-mutes{display:flex;gap:5px;margin:7px 0 0}.step-mutes button{flex:1;min-width:0;min-height:40px;display:flex;align-items:center;flex-direction:column;gap:7px;font-size:8px;color:var(--muted)}.step-mutes i{display:block;width:5px;height:5px;background:var(--green);border-radius:50%;margin-top:5px}.step-mutes button[aria-pressed=false] i{background:none;border:1px solid #b9bfae}.step-mutes button.playing{color:var(--green);font-weight:bold}.graph-hint{font-size:9px;color:var(--muted);text-align:center;margin:8px 0 20px}.arp-actions{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:9px 0;margin-bottom:22px}.text-button{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--green);min-height:32px}.text-button svg{width:15px;height:15px}#step-count{font-size:9px;color:var(--muted)}.arp-settings{display:grid;grid-template-columns:1fr 85px;gap:22px 28px;align-items:center}.range-control{display:grid;grid-template-columns:1fr auto;row-gap:8px}.range-control label,.range-control output{font-size:10px}.range-control output{color:var(--muted);font-variant-numeric:tabular-nums}.range-control input{grid-column:1/-1}.division-field select{padding-bottom:6px}.link-button{font-size:15px;display:flex;gap:6px;align-items:center;min-height:40px;color:var(--muted)}.link-button span{font-size:10px}.link-button[aria-pressed=true]{color:var(--green)}.quiet-note{display:flex;gap:14px;align-items:center;margin:30px 0 10px;color:var(--muted)}.quiet-note .little-star{font-size:25px;color:#b2bba4}.quiet-note p{font-family:var(--serif);font-style:italic;font-size:13px;line-height:1.6;margin:0}
+input[type=range]{width:100%;min-width:0;height:24px;appearance:none;background:transparent;cursor:pointer;margin:0;--fill:50%;touch-action:pan-y}input[type=range]::-webkit-slider-runnable-track{height:2px;background:linear-gradient(to right,var(--green) 0 var(--fill),var(--line) var(--fill) 100%)}input[type=range]::-webkit-slider-thumb{appearance:none;width:11px;height:11px;border:2px solid var(--green);background:var(--paper);border-radius:50%;margin-top:-4.5px}input[type=range]::-moz-range-track{height:2px;background:var(--line)}input[type=range]::-moz-range-progress{background:var(--green);height:2px}input[type=range]::-moz-range-thumb{width:8px;height:8px;background:var(--paper);border:2px solid var(--green);border-radius:50%}
+.stage{position:relative;height:240px;margin-top:10px;isolation:isolate}.flower-orbit{position:absolute;width:66%;height:40%;border:1px solid #dcded15c;border-radius:50%;left:17%;top:30%;transform:rotate(-24deg);z-index:-1}.flower-orbit:after{content:'';position:absolute;inset:-20px;border:1px solid #dcded133;border-radius:50%;transform:rotate(50deg)}#flower-canvas{display:block;position:absolute;inset:0;width:100%;height:100%;pointer-events:none}#flower-canvas.interactive{pointer-events:auto;cursor:grab}.specimen-label{position:absolute;left:0;bottom:12px;font-size:7px;letter-spacing:1.2px;color:#9ba08e;pointer-events:none}.view-tools{position:absolute;right:0;bottom:0;display:flex;align-items:center;gap:5px}.view-tools .round-button{border-color:transparent;width:30px;height:34px}.rotate-button{font-size:15px;color:var(--muted);display:flex;align-items:center;gap:5px;min-height:34px}.rotate-button span{font-size:9px}.rotate-button[aria-pressed=true]{color:var(--accent)}#scene-error{position:absolute;inset:30% 5% auto;background:var(--paper);padding:20px;font-size:12px;line-height:1.7;text-align:center}.flower-palette-row{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:15px;margin-top:7px}.flower-palette-row>span{font-size:10px;color:var(--muted)}.palettes{display:flex;gap:7px}.palette{height:30px;width:30px;border:1px solid transparent;border-radius:50%;display:grid;place-items:center}.palette span{display:block;width:17px;height:17px;background:var(--swatch);border-radius:50%}.palette[aria-pressed=true]{border-color:#8d9a7b}.flower-sound-note{font-family:var(--serif);font-style:italic;font-size:12px;color:var(--muted);margin:14px 0 21px}.control-section{padding:15px 0 8px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:8px 24px}.control-section:before{content:attr(aria-label);grid-column:1/-1;font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:4px}.control{display:grid;grid-template-columns:1fr auto;gap:3px}.control label,.control output{font-size:10px}.control output{font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums}.control input{grid-column:1/-1}.flower-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:10px;margin-top:5px}.subtle-button{font-size:9px;color:var(--muted);min-height:35px}
+.carousel-wayfinding{display:flex;align-items:center;justify-content:center;gap:14px;border-top:1px solid #dddfd355;padding:0 15px}.carousel-wayfinding>button{font-size:15px;width:30px;height:35px;color:var(--green)}.carousel-dots{display:flex;gap:2px}.carousel-dots button{width:16px;height:28px;display:grid;place-items:center}.carousel-dots button:after{content:'';width:4px;height:4px;border-radius:50%;background:#cdd2c2}.carousel-dots button[aria-current]:after{background:var(--green);width:5px;height:5px}#swipe-hint{font-size:8px;letter-spacing:.6px;color:var(--muted)}.transport{border-top:1px solid var(--line);padding:17px 28px max(14px,env(safe-area-inset-bottom));background:var(--paper);box-shadow:0 -8px 20px #f5f3ec66}.transport-main{display:flex;align-items:center;gap:14px}#play{background:var(--ink);color:var(--paper);width:47px;height:47px;flex:0 0 47px;border-radius:50%;display:grid;place-items:center;transition:background .15s}#play:hover{background:var(--green)}#play svg{width:23px;height:23px;fill:currentColor;stroke:none;margin-left:2px}#play[aria-pressed=true] svg{margin-left:0}.now-playing{display:flex;flex-direction:column;gap:7px;min-width:0;flex:1}.now-playing>span{font-size:8px;color:var(--muted);letter-spacing:.4px}.now-playing strong{font-weight:normal;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.now-playing strong span{color:var(--muted);font-size:10px}#scope{width:56px;height:32px;opacity:.7}.transport-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:11px;height:27px}.tempo-control{display:flex;align-items:center;gap:4px}.tempo-control input{appearance:textfield;-moz-appearance:textfield;width:31px;padding:0;border:0;color:var(--ink);background:none;font-size:11px;font-variant-numeric:tabular-nums;border-radius:0}.tempo-control input::-webkit-inner-spin-button,.tempo-control input::-webkit-outer-spin-button{appearance:none}.tempo-control span{font-size:8px;letter-spacing:1px;color:var(--muted)}.beat-dots{display:flex;gap:8px}.beat-dots i{width:3px;height:3px;border-radius:50%;background:#cdd2c2}.beat-dots i.active{background:var(--green);box-shadow:0 0 0 3px #6c826110}.volume-control{display:flex;align-items:center;gap:7px;width:93px}.volume-control button{height:30px;width:26px;display:grid;place-items:center}.volume-control svg{width:14px;height:14px}.volume-control input{width:60px}.volume-control input::-webkit-slider-thumb{width:8px;height:8px;margin-top:-3px}.volume-control button[aria-pressed=true]{color:var(--accent)}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}#audio-error{position:absolute;bottom:140px;left:20px;right:20px;background:var(--ink);color:var(--paper);font-size:12px;line-height:1.6;padding:16px;border-radius:6px;z-index:4}
+#loop-progression{font-size:9px;color:var(--muted);min-height:32px;white-space:nowrap;margin-left:auto}#loop-progression[aria-pressed=true]{color:var(--green)}
+@media(min-width:600px){body{background:radial-gradient(ellipse at 20% 20%,#e1e5d9,transparent 55%),radial-gradient(ellipse at 90% 80%,#ece1d5,transparent 60%),#e9e9e0}.app-shell{border-left:1px solid #d9ddcf;border-right:1px solid #d9ddcf;box-shadow:0 20px 90px #47523d08}.view{padding-left:38px;padding-right:38px}.app-header,.transport{padding-left:38px;padding-right:38px}.view-tabs{padding-left:38px;padding-right:38px}}
+@media(max-width:360px){.app-header{padding:18px 22px}.header-note{font-size:8px}.view{padding-left:22px;padding-right:22px}.view-heading h1{font-size:29px}.view-tabs{padding:0 22px}.transport{padding-left:22px;padding-right:22px}.wheel-wrap{margin-top:18px}.arp-topline{gap:15px}}
+@media(max-height:760px){.app-header{padding-top:max(16px,env(safe-area-inset-top));padding-bottom:14px}.view{padding-top:22px}.wheel-wrap{width:min(100%,285px);margin-top:16px}.wheel-legend{margin-bottom:19px}.progression-section{margin-top:18px}.stage{height:210px}.transport{padding-top:13px;padding-bottom:max(10px,env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
   </style>
 </head>
 <body>
-  <h1>Hello, World!</h1>
+<div class="app-shell">
+  <header class="app-header">
+    <a class="wordmark" href="./" aria-label="Flura home"><svg viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.4"><ellipse cx="16" cy="10" rx="3.8" ry="7"/><ellipse cx="16" cy="10" rx="3.8" ry="7" transform="rotate(60 16 16)"/><ellipse cx="16" cy="10" rx="3.8" ry="7" transform="rotate(120 16 16)"/><ellipse cx="16" cy="10" rx="3.8" ry="7" transform="rotate(180 16 16)"/><ellipse cx="16" cy="10" rx="3.8" ry="7" transform="rotate(240 16 16)"/><ellipse cx="16" cy="10" rx="3.8" ry="7" transform="rotate(300 16 16)"/></g><circle cx="16" cy="16" r="3" fill="currentColor"/></svg>flura<span class="wordmark-dot">.</span></a>
+    <span class="header-note">a little garden of sound</span>
+  </header>
+  <nav class="view-tabs" aria-label="Instrument views">
+    <button type="button" data-view="0" aria-current="page"><span>01</span> Chords</button>
+    <button type="button" data-view="1"><span>02</span> Arp</button>
+    <button type="button" data-view="2"><span>03</span> Flower</button>
+  </nav>
+  <main class="carousel" aria-label="Instrument carousel" tabindex="0">
+    <section class="view chord-view" aria-labelledby="chord-heading" data-page="0">
+      <div class="view-heading"><p class="eyebrow"><span class="little-star">✳</span> Plant a feeling</p><h1 id="chord-heading">Find your harmony.</h1><p>Every little thing starts with a chord.</p></div>
+      <div class="wheel-wrap"><svg id="wheel" viewBox="0 0 340 340" aria-label="Circle of fifths chord wheel"></svg><button type="button" id="audition" class="chord-center" aria-label="Audition selected chord"><span id="chord-name">C</span><span id="chord-quality">add9</span><span class="center-hint">tap to listen</span></button></div>
+      <div class="wheel-legend"><span><i></i> major</span><span><i></i> minor</span></div>
+      <div class="chord-options">
+        <label class="select-field"><span>Extension</span><select id="extension"><option value="triad">Triad</option><option value="seventh">7th</option><option value="ninth" selected>Add 9</option><option value="sus">Sus 4</option></select></label>
+        <label class="select-field"><span>Voicing</span><select id="voicing"><option value="0">Root position</option><option value="1">1st inversion</option><option value="2">2nd inversion</option></select></label>
+      </div>
+      <div class="progression-section">
+        <div class="section-label"><span>A little progression</span><button id="capture" type="button" aria-pressed="false"><i class="record-dot"></i><span>Record 4</span></button></div>
+        <div class="progression-slots" aria-label="Four chord progression"><button type="button" data-slot="0" aria-label="Progression slot 1, empty"><span>01</span><strong>＋</strong></button><button type="button" data-slot="1" aria-label="Progression slot 2, empty"><span>02</span><strong>＋</strong></button><button type="button" data-slot="2" aria-label="Progression slot 3, empty"><span>03</span><strong>＋</strong></button><button type="button" data-slot="3" aria-label="Progression slot 4, empty"><span>04</span><strong>＋</strong></button></div>
+        <div class="progression-bottom"><span id="progression-hint">Record four chords to make them loop.</span><button id="clear-progression" type="button" hidden>Clear</button></div>
+      </div>
+    </section>
+    <section class="view arp-view" aria-labelledby="arp-heading" data-page="1" inert>
+      <div class="view-heading"><p class="eyebrow"><span class="little-star">✳</span> Let it wander</p><h1 id="arp-heading">A pattern in bloom.</h1><p>Give your chord a little room to move.</p></div>
+      <div class="arp-topline"><label class="select-field"><span>Pattern</span><select id="pattern"><option value="bloom">Up / down</option><option value="up">Up</option><option value="down">Down</option><option value="drift">Wandering</option><option value="custom">Your pattern</option></select></label><label class="select-field rate-field"><span>Rate</span><select id="rate"><option value="1">1/4</option><option value="0.5">1/8</option><option value="0.25" selected>1/16</option><option value="0.3333333333333333">1/8 T</option></select></label><button class="round-button" id="arp-bypass" type="button" aria-label="Bypass arpeggiator" aria-pressed="false" title="Bypass arpeggiator"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v7M5.5 4.5a7 7 0 1 0 9 0"/></svg></button></div>
+      <div class="lane-tabs" role="tablist" aria-label="Arpeggiator lanes"><button type="button" id="tab-note" role="tab" aria-selected="true" aria-controls="lane-panel" data-lane="note">Note</button><button type="button" id="tab-gate" role="tab" aria-selected="false" aria-controls="lane-panel" tabindex="-1" data-lane="gate">Gate</button><button type="button" id="tab-velocity" role="tab" aria-selected="false" aria-controls="lane-panel" tabindex="-1" data-lane="velocity">Velocity</button><button type="button" id="tab-octave" role="tab" aria-selected="false" aria-controls="lane-panel" tabindex="-1" data-lane="octave">Octave</button></div>
+      <div id="lane-panel" role="tabpanel" aria-labelledby="tab-note"><div class="graph-caption"><span id="lane-description">Chord degree</span><span id="lane-range">1 — 8</span></div><div id="step-graph" class="step-graph" aria-label="Draw steps by dragging vertically"></div><div id="step-mutes" class="step-mutes" aria-label="Step on and off"></div></div>
+      <p class="graph-hint">Drag to shape. Tap a dot to rest.</p>
+      <div class="arp-actions"><button id="randomize-lane" type="button" class="text-button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m14 3 3 3-3 3M3 6h14M6 11l-3 3 3 3m-3-3h14"/></svg> A little chance</button><span id="step-count">8 steps</span></div>
+      <div class="arp-settings"><div class="range-control"><label for="lane-length">Length</label><output for="lane-length" id="length-out">8</output><input id="lane-length" aria-label="Current lane length" type="range" min="1" max="16" value="8" /></div><label class="select-field division-field"><span>Clock</span><select id="lane-division" aria-label="Current lane clock division"><option value="1">÷ 1</option><option value="2">÷ 2</option><option value="3">÷ 3</option><option value="4">÷ 4</option><option value="6">÷ 6</option><option value="8">÷ 8</option></select></label><div class="range-control"><label for="swing">Swing</label><output for="swing" id="swing-out">0%</output><input id="swing" type="range" min="0" max="60" value="0" /></div><button type="button" id="link-lengths" class="link-button" aria-pressed="true" title="Link all lane lengths">⇄ <span>Linked</span></button></div>
+      <div class="quiet-note"><span class="little-star">✳</span><p>Small changes make lovely accidents.<br>Each lane can find its own rhythm.</p></div>
+    </section>
+    <section class="view flower-view" aria-labelledby="flower-heading" data-page="2" inert>
+      <div class="view-heading"><p class="eyebrow"><span class="little-star">✳</span> Grow your sound</p><h1 id="flower-heading">Something of your own.</h1><p>A living little instrument, shaped by you.</p></div>
+      <div class="stage"><div class="flower-orbit" aria-hidden="true"></div><canvas id="flower-canvas" aria-label="Floating 3D flower" tabindex="-1"></canvas><span class="specimen-label">FIG. 01 — <span id="palette-name">TERRACOTTA</span></span><div class="view-tools"><button id="motion" class="round-button" type="button" aria-label="Pause floating motion" aria-pressed="true"><svg id="motion-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button><button id="rotate-flower" class="rotate-button" type="button" aria-pressed="false">↔ <span>Rotate</span></button><button id="reset-view" class="round-button" type="button" aria-label="Reset camera view"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 0 5M4 3v5h5"/></svg></button></div><p id="scene-error" role="alert" hidden></p></div>
+      <div class="flower-palette-row"><span>Pick a mood</span><div id="palettes" class="palettes" role="group" aria-label="Flower color palette"></div></div>
+      <p class="flower-sound-note">Bloom opens the filter. Petals add voices.</p>
+      <div id="slider-controls" class="flower-controls"></div>
+      <div class="flower-footer"><button type="button" id="randomize" class="text-button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m14 3 3 3-3 3M3 6h14M6 11l-3 3 3 3m-3-3h14"/></svg> Grow something new</button><button type="button" id="reset" class="subtle-button">Reset flower</button></div>
+    </section>
+  </main>
+  <div class="carousel-wayfinding"><button type="button" id="previous-view" aria-label="Previous view" disabled>←</button><div class="carousel-dots" aria-label="Choose a view"><button type="button" data-view="0" aria-label="Chords view" aria-current="page"></button><button type="button" data-view="1" aria-label="Arp view"></button><button type="button" data-view="2" aria-label="Flower view"></button></div><span id="swipe-hint">swipe to explore</span><button type="button" id="next-view" aria-label="Next view">→</button></div>
+  <footer class="transport" aria-label="Playback controls"><div class="transport-main"><button id="play" type="button" aria-label="Play" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path id="play-icon" d="m9 5 11 7-11 7Z"/></svg></button><div class="now-playing"><span id="play-status">Ready when you are</span><strong id="playing-chord">C add9 <span>· up / down</span></strong></div><canvas id="scope" width="112" height="64" aria-hidden="true"></canvas></div><div class="transport-bottom"><label class="tempo-control" for="tempo"><input id="tempo" type="number" min="40" max="240" value="122" inputmode="numeric" aria-label="Tempo in beats per minute" /><span>BPM</span></label><div class="beat-dots" aria-label="Beat indicator"><i></i><i></i><i></i><i></i></div><div class="volume-control"><button type="button" id="mute" aria-label="Mute" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m9 4-4 4H2v4h3l4 4ZM12 6a6 6 0 0 1 0 8M14.5 3.5a10 10 0 0 1 0 13"/></svg></button><input id="volume" type="range" min="0" max="100" value="55" aria-label="Volume" /></div></div></footer>
+  <div id="announcement" class="sr-only" aria-live="polite"></div>
+  <p id="audio-error" role="alert" hidden></p>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+(() => {
+  "use strict";
+  const { OrbitControls } = THREE;
+
+  // One ring of petals, using the rounded outline from synth/garden.js.
+  // Width scales uniformly to fit a spoke, preserving the silhouette as the
+  // flower closes or the petal count increases.
+  function createPetalGeometry({ count, open, length, curl }) {
+    const rows = 32;
+    const columns = 10;
+    const halfSector = (Math.PI / count) * 0.92;
+    const angle = -1.39 + open * 1.49;
+    const rootRadius = 0.1 + open * 0.17;
+    const radialSpan = length * Math.cos(angle);
+    const rise = -length * Math.sin(angle);
+    const cup = length * curl * 0.46 * Math.cos(angle);
+    const profile = [];
+    let widestSlope = 0;
+    for (let row = 0; row <= rows; row++) {
+      const u = row / rows * Math.PI;
+      const t = (1 - Math.cos(u)) / 2;
+      const radius = rootRadius + radialSpan * t;
+      // Same radial/lateral parametrization as the synth's drawBloom().
+      const width = Math.sin(u) * Math.sin(u / 2) * length * 0.46;
+      widestSlope = Math.max(widestSlope, width / radius);
+      profile.push({ t, radius, width });
+    }
+    const widthScale = Math.min(1, Math.tan(halfSector) / widestSlope);
+    const positions = [];
+    const indices = [];
+
+    for (let side = 0; side < 2; side++) {
+      for (const { t, radius, width } of profile) {
+        for (let column = 0; column <= columns; column++) {
+          const across = (column / columns) * 2 - 1;
+          const x = width * widthScale * across;
+          const edgeCup = length * 0.035 * across ** 2 * Math.sin(Math.PI * t);
+          const thickness = length * 0.006 * Math.sin(Math.PI * t);
+          const y = -0.025 + rise * t + cup * t * t + edgeCup
+            + (side === 0 ? thickness : -thickness);
+          positions.push(x, y, radius);
+        }
+      }
+    }
+
+    const stride = columns + 1;
+    const surfaceCount = (rows + 1) * stride;
+    for (let side = 0; side < 2; side++) {
+      for (let row = 0; row < rows; row++) {
+        for (let column = 0; column < columns; column++) {
+          const a = side * surfaceCount + row * stride + column;
+          const b = a + 1;
+          const c = a + stride;
+          const d = c + 1;
+          if (side === 0) indices.push(a, c, b, b, c, d);
+          else indices.push(a, b, c, b, d, c);
+        }
+      }
+    }
+    for (let row = 0; row < rows; row++) {
+      for (const column of [0, columns]) {
+        const a = row * stride + column;
+        const b = a + stride;
+        if (column === 0)
+          indices.push(
+            a,
+            a + surfaceCount,
+            b,
+            b,
+            a + surfaceCount,
+            b + surfaceCount,
+          );
+        else
+          indices.push(
+            a,
+            b,
+            a + surfaceCount,
+            b,
+            b + surfaceCount,
+            a + surfaceCount,
+          );
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3),
+    );
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+
+
+  const DEFAULTS = Object.freeze({
+    bloom: 78,
+    petals: 9,
+    petalLength: 1.35,
+    curl: 35,
+    height: 3.5,
+    bend: 24,
+    leafLength: 1.35,
+    leafCount: 3,
+    sway: 30,
+    spin: 10,
+  });
+  const sections = [
+    {
+      title: "Bloom",
+      controls: [
+        ["bloom", "Bloom", 0, 100, 1, "%"],
+        ["petals", "Petals", 5, 16, 1, ""],
+        ["petalLength", "Length", 0.65, 1.9, 0.01, "×", "Petal length"],
+        ["curl", "Curl", 0, 100, 1, "%", "Petal curl"],
+      ],
+    },
+    {
+      title: "Stem & leaves",
+      controls: [
+        ["height", "Height", 2, 4.7, 0.01, "×", "Stem height"],
+        ["bend", "Bend", -65, 65, 1, "%", "Stem bend"],
+        ["leafLength", "Leaf", 0.3, 2, 0.01, "×", "Leaf length"],
+        ["leafCount", "Leaves", 0, 6, 1, ""],
+      ],
+    },
+    {
+      title: "Motion",
+      controls: [
+        ["sway", "Sway", 0, 100, 1, "%"],
+        ["spin", "Spin", 0, 100, 1, "%", "Slow spin"],
+      ],
+    },
+  ];
+  const palettes = [
+    {
+      name: "Terracotta",
+      petals: ["#e78b7d", "#dd766b", "#f1a094"],
+      center: "#e5b546",
+      seed: "#b77d28",
+      leaf: "#729577",
+      stem: "#688267",
+    },
+    {
+      name: "Buttercup",
+      petals: ["#edc668", "#dfb54d", "#f5d782"],
+      center: "#92613f",
+      seed: "#694e34",
+      leaf: "#769376",
+      stem: "#657e61",
+    },
+    {
+      name: "Lilac",
+      petals: ["#b3a0cc", "#9f89bc", "#c6b5dd"],
+      center: "#e4bd60",
+      seed: "#aa823d",
+      leaf: "#7e9a88",
+      stem: "#668270",
+    },
+    {
+      name: "Cloud",
+      petals: ["#f0e9db", "#e0d8c7", "#fff9ec"],
+      center: "#d9af47",
+      seed: "#9e7d30",
+      leaf: "#7f9777",
+      stem: "#6c8061",
+    },
+    {
+      name: "Rose",
+      petals: ["#d98f9e", "#c9768c", "#e9a4b2"],
+      center: "#e4c16b",
+      seed: "#ae9141",
+      leaf: "#7e9c83",
+      stem: "#64816c",
+    },
+  ];
+
+  const state = { ...DEFAULTS };
+  const current = { ...DEFAULTS };
+  let paletteIndex = 0;
+  const inputs = new Map();
+  const outputs = new Map();
+  const sliderContainer = document.querySelector("#slider-controls");
+  const announcement = document.querySelector("#announcement");
+
+  function publishState() {
+    window.dispatchEvent(new CustomEvent("flura:flower", { detail: { ...state } }));
+  }
+
+  function syncControl(key, value) {
+    const input = inputs.get(key);
+    input.value = value;
+    const progress =
+      (value - Number(input.min)) / (Number(input.max) - Number(input.min));
+    input.style.setProperty("--fill", `${progress * 100}%`);
+    const unit = input.dataset.unit;
+    outputs.get(key).value =
+      `${unit === "×" ? Number(value).toFixed(2) : Math.round(value)}${unit}`;
+    publishState();
+  }
+
+  sections.forEach((section) => {
+    const group = document.createElement("section");
+    group.className = "control-section";
+    group.setAttribute("aria-label", section.title);
+    section.controls.forEach(
+      ([key, label, min, max, step, unit, full = label]) => {
+        const row = document.createElement("div");
+        row.className = "control";
+        row.innerHTML = `<label for="${key}">${label}</label><output for="${key}"></output><input type="range" id="${key}" min="${min}" max="${max}" step="${step}" data-unit="${unit}" aria-label="${full}" title="Double-click to reset" />`;
+        const input = row.querySelector("input");
+        inputs.set(key, input);
+        outputs.set(key, row.querySelector("output"));
+        input.addEventListener("input", () => {
+          state[key] = Number(input.value);
+          syncControl(key, state[key]);
+        });
+        input.addEventListener("dblclick", () => {
+          state[key] = DEFAULTS[key];
+          syncControl(key, state[key]);
+        });
+        syncControl(key, state[key]);
+        group.append(row);
+      },
+    );
+    sliderContainer.append(group);
+  });
+
+  const paletteButtons = palettes.map((palette, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "palette";
+    button.setAttribute("aria-label", `${palette.name} palette`);
+    button.title = palette.name;
+    button.style.setProperty("--swatch", palette.petals[0]);
+    button.setAttribute("aria-pressed", String(index === paletteIndex));
+    button.innerHTML = "<span></span>";
+    button.addEventListener("click", () => selectPalette(index));
+    document.querySelector("#palettes").append(button);
+    return button;
+  });
+
+  let materials;
+  function selectPalette(index) {
+    paletteIndex = index;
+    document.querySelector("#palette-name").textContent = palettes[index].name.toUpperCase();
+    paletteButtons.forEach((button, i) =>
+      button.setAttribute("aria-pressed", String(i === index)),
+    );
+    if (!materials) return;
+    const palette = palettes[index];
+    materials.petals.forEach((material, i) =>
+      material.color.set(palette.petals[i]),
+    );
+    for (const key of ["center", "seed", "leaf", "stem"])
+      materials[key].color.set(palette[key]);
+  }
+
+  document.querySelector("#reset").addEventListener("click", () => {
+    Object.assign(state, DEFAULTS);
+    for (const key of Object.keys(state)) syncControl(key, state[key]);
+    selectPalette(0);
+    announcement.textContent = "Flower reset.";
+  });
+  document.querySelector("#randomize").addEventListener("click", () => {
+    const ranges = {
+      bloom: [35, 100],
+      petals: [6, 13],
+      petalLength: [0.9, 1.65],
+      curl: [10, 85],
+      height: [2.5, 4.3],
+      bend: [-50, 50],
+      leafLength: [0.6, 1.8],
+      leafCount: [1, 5],
+      sway: [15, 65],
+      spin: [0, 12],
+    };
+    for (const [key, min, max, step] of sections
+      .flatMap((section) => section.controls)
+      .map(([key, , min, max, step]) => [key, min, max, step])) {
+      const [low, high] = ranges[key] ?? [min, max];
+      state[key] = Number(
+        (Math.round((low + Math.random() * (high - low)) / step) * step).toFixed(
+          2,
+        ),
+      );
+      syncControl(key, state[key]);
+    }
+    selectPalette(
+      (paletteIndex + 1 + Math.floor(Math.random() * (palettes.length - 1))) %
+        palettes.length,
+    );
+    announcement.textContent = `New ${palettes[paletteIndex].name.toLowerCase()} flower.`;
+  });
+
+  // Leaves and sepals have a softly ridged face, an underside, and an edge.
+  function createLeafGeometry() {
+    const rows = 14;
+    const columns = 10;
+    const positions = [];
+    const indices = [];
+    for (let side = 0; side < 2; side++) {
+      for (let row = 0; row <= rows; row++) {
+        const t = row / rows;
+        const outline = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.95);
+        const width = 0.25 * outline;
+        for (let col = 0; col <= columns; col++) {
+          const across = (col / columns) * 2 - 1;
+          const x = across * width;
+          const ridge = (1 - Math.abs(across)) * Math.sin(t * Math.PI) * 0.08;
+          const cup = 0.12 * t * t;
+          const y =
+            ridge + cup + (side === 0 ? 0.009 : -0.009) * Math.sin(t * Math.PI);
+          positions.push(x, y, t);
+        }
+      }
+    }
+    const stride = columns + 1;
+    const surfaceCount = (rows + 1) * stride;
+    for (let side = 0; side < 2; side++) {
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < columns; col++) {
+          const a = side * surfaceCount + row * stride + col;
+          const b = a + 1;
+          const c = a + stride;
+          const d = c + 1;
+          if (side === 0) indices.push(a, c, b, b, c, d);
+          else indices.push(a, b, c, b, d, c);
+        }
+      }
+    }
+    for (let row = 0; row < rows; row++) {
+      for (const col of [0, columns]) {
+        const a = row * stride + col;
+        const b = a + stride;
+        if (col === 0)
+          indices.push(
+            a,
+            a + surfaceCount,
+            b,
+            b,
+            a + surfaceCount,
+            b + surfaceCount,
+          );
+        else
+          indices.push(
+            a,
+            b,
+            a + surfaceCount,
+            b,
+            b + surfaceCount,
+            a + surfaceCount,
+          );
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3),
+    );
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+
+  function startScene() {
+    const canvas = document.querySelector("#flower-canvas");
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    renderer.setClearColor(0xf5f3ec, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+    camera.position.set(4.4, 3.6, 7.6);
+    const controls = new OrbitControls(camera, canvas);
+    controls.target.set(0, 0.15, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.075;
+    controls.enablePan = false;
+    controls.enabled = false;
+    const rotateButton = document.querySelector("#rotate-flower");
+    rotateButton.addEventListener("click", () => {
+      controls.enabled = !controls.enabled;
+      canvas.classList.toggle("interactive", controls.enabled);
+      rotateButton.setAttribute("aria-pressed", String(controls.enabled));
+      rotateButton.querySelector("span").textContent = controls.enabled ? "Done" : "Rotate";
+      canvas.setAttribute("aria-label", controls.enabled ? "3D flower. Drag to rotate, pinch to zoom. Choose Done to swipe views." : "Floating 3D flower");
+      announcement.textContent = controls.enabled ? "Drag the flower to rotate. Choose Done to swipe between views." : "Rotation off. Swipe to explore.";
+    });
+    controls.minDistance = 6;
+    controls.maxDistance = 19;
+    controls.minPolarAngle = 0.15;
+    controls.maxPolarAngle = Math.PI - 0.15;
+    controls.saveState();
+    document
+      .querySelector("#reset-view")
+      .addEventListener("click", () => controls.reset());
+    scene.add(new THREE.HemisphereLight(0xfffaf0, 0xabb5a1, 2.6));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    keyLight.position.set(-3, 7, 5);
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xffe5d3, 0.6);
+    fillLight.position.set(5, 1, -3);
+    scene.add(fillLight);
+
+    // A three-step lighting ramp gives flat blocks of color rather than glossy highlights.
+    const gradient = new THREE.DataTexture(
+      new Uint8Array([105, 190, 255]),
+      3,
+      1,
+      THREE.RedFormat,
+    );
+    gradient.minFilter = gradient.magFilter = THREE.NearestFilter;
+    gradient.needsUpdate = true;
+    const material = (color) =>
+      new THREE.MeshToonMaterial({
+        color,
+        gradientMap: gradient,
+        side: THREE.DoubleSide,
+      });
+    const palette = palettes[paletteIndex];
+    materials = {
+      petals: palette.petals.map(material),
+      center: material(palette.center),
+      seed: material(palette.seed),
+      leaf: material(palette.leaf),
+      stem: material(palette.stem),
+    };
+    const flower = new THREE.Group();
+    scene.add(flower);
+    const bloom = new THREE.Group();
+    flower.add(bloom);
+    const petalGroup = new THREE.Group();
+    bloom.add(petalGroup);
+    const leafGroup = new THREE.Group();
+    flower.add(leafGroup);
+    let petalGeometry = createPetalGeometry({
+      count: state.petals,
+      open: current.bloom / 100,
+      length: current.petalLength,
+      curl: current.curl / 100,
+    });
+    const leafGeometry = createLeafGeometry();
+    const sepalGeometry = createLeafGeometry();
+    const petals = [];
+    const leaves = [];
+    let previousPetalCount = -1;
+    let previousLeafCount = -1;
+    let previousPetalShape = "";
+    let stem;
+    let previousStem = "";
+
+    const center = new THREE.Mesh(
+      new THREE.SphereGeometry(0.32, 32, 16),
+      materials.center,
+    );
+    center.scale.set(1, 0.46, 1);
+    center.position.y = 0.045;
+    bloom.add(center);
+    const calyx = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 16, 12),
+      materials.stem,
+    );
+    calyx.scale.set(1, 0.55, 1);
+    calyx.position.y = -0.11;
+    bloom.add(calyx);
+    for (let i = 0; i < 5; i++) {
+      const pivot = new THREE.Group();
+      pivot.rotation.y = (i * Math.PI * 2) / 5;
+      const sepal = new THREE.Mesh(sepalGeometry, materials.leaf);
+      sepal.scale.set(0.75, 0.8, 0.55);
+      sepal.rotation.x = 0.3;
+      pivot.position.y = -0.12;
+      pivot.add(sepal);
+      bloom.add(pivot);
+    }
+    // Deterministic golden-angle seed pattern; no random flicker when reshaping.
+    const seeds = new THREE.InstancedMesh(
+      new THREE.SphereGeometry(0.022, 7, 5),
+      materials.seed,
+      85,
+    );
+    const seedPose = new THREE.Object3D();
+    for (let i = 0; i < 85; i++) {
+      const radius = 0.285 * Math.sqrt((i + 0.5) / 85);
+      const angle = i * Math.PI * (3 - Math.sqrt(5));
+      seedPose.position.set(
+        Math.cos(angle) * radius,
+        0.05 + 0.146 * Math.sqrt(1 - (radius / 0.32) ** 2),
+        Math.sin(angle) * radius,
+      );
+      seedPose.scale.set(0.8, 1.2, 0.8);
+      seedPose.updateMatrix();
+      seeds.setMatrixAt(i, seedPose.matrix);
+    }
+    bloom.add(seeds);
+
+    function rebuildPetals(count) {
+      petalGroup.clear();
+      petals.length = 0;
+      for (let i = 0; i < count; i++) {
+        const pivot = new THREE.Group();
+        pivot.rotation.y = i / count * Math.PI * 2;
+        const petal = new THREE.Mesh(petalGeometry, materials.petals[i % 3]);
+        pivot.add(petal);
+        petalGroup.add(pivot);
+        petals.push({ pivot, petal });
+      }
+    }
+
+    function rebuildLeaves(count) {
+      leafGroup.clear();
+      leaves.length = 0;
+      for (let i = 0; i < count; i++) {
+        const pivot = new THREE.Group();
+        const leaf = new THREE.Mesh(leafGeometry, materials.leaf);
+        pivot.add(leaf);
+        leafGroup.add(pivot);
+        leaves.push({
+          pivot,
+          leaf,
+          fraction: 0.22 + (i / Math.max(count, 1)) * 0.53,
+        });
+      }
+    }
+    const point = new THREE.Vector3();
+    function reshape() {
+      if (previousPetalCount !== state.petals) {
+        previousPetalCount = state.petals;
+        rebuildPetals(state.petals);
+      }
+      if (previousLeafCount !== state.leafCount) {
+        previousLeafCount = state.leafCount;
+        rebuildLeaves(state.leafCount);
+      }
+      const open = current.bloom / 100;
+      const petalShape = [state.petals, open, current.petalLength, current.curl]
+        .map((value) => value.toFixed(5))
+        .join(",");
+      if (previousPetalShape !== petalShape) {
+        previousPetalShape = petalShape;
+        const oldGeometry = petalGeometry;
+        petalGeometry = createPetalGeometry({
+          count: state.petals,
+          open,
+          length: current.petalLength,
+          curl: current.curl / 100,
+        });
+        petals.forEach(({ petal }) => { petal.geometry = petalGeometry; });
+        oldGeometry.dispose();
+      }
+
+      const centerWidth = 0.3 + open * 0.7;
+      center.scale.set(centerWidth, 0.46, centerWidth);
+      seeds.scale.set(centerWidth, 0.6 + open * 0.4, centerWidth);
+      const bend = current.bend / 100;
+      const height = current.height;
+      const bottom = -1.95;
+      const curve = new THREE.CubicBezierCurve3(
+        new THREE.Vector3(0, bottom, 0),
+        new THREE.Vector3(-bend * 0.4, bottom + height * 0.35, 0.06),
+        new THREE.Vector3(bend * 1.45, bottom + height * 0.72, -0.05),
+        new THREE.Vector3(bend * 1.3, bottom + height, 0),
+      );
+      const stemKey = `${height.toFixed(4)},${bend.toFixed(4)}`;
+      if (previousStem !== stemKey) {
+        previousStem = stemKey;
+        const geometry = new THREE.TubeGeometry(curve, 40, 0.042, 8, false);
+        if (stem) {
+          stem.geometry.dispose();
+          stem.geometry = geometry;
+        } else {
+          stem = new THREE.Mesh(geometry, materials.stem);
+          flower.add(stem);
+        }
+      }
+      bloom.position.copy(curve.getPoint(1));
+      bloom.rotation.set(0.5, 0.15, -0.12 - bend * 0.22);
+      // Recenter the growing specimen without changing the user's orbit or zoom.
+      const petalAngle = -1.39 + open * 1.49;
+      const tipHeight =
+        current.petalLength *
+        (((Math.cos(petalAngle) * current.curl) / 100) * 0.46 -
+          Math.sin(petalAngle));
+      const top = bottom + height + Math.max(0.2, tipHeight) + 0.1;
+      const centerY = (bottom + top) * 0.5;
+      const targetShift = centerY - controls.target.y;
+      camera.position.y += targetShift;
+      controls.target.y = centerY;
+      leaves.forEach(({ pivot, leaf, fraction }, i) => {
+        pivot.position.copy(curve.getPoint(fraction, point));
+        pivot.rotation.y = (i % 2 === 0 ? -1.2 : 1.8) + Math.floor(i / 2) * 0.62;
+        leaf.rotation.x = -0.38 - i * 0.065;
+        const length = current.leafLength * (1 - fraction * 0.25);
+        leaf.scale.set(length * 1.3, length, length);
+      });
+    }
+
+    const stage = document.querySelector(".stage");
+    const resize = () => {
+      const { width, height } = stage.getBoundingClientRect();
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      // Keep the whole specimen in frame in portrait layouts, including long leaves.
+      camera.fov = width / height < 0.85 ? 42 : 34;
+      camera.updateProjectionMatrix();
+    };
+    let visible = false;
+    new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }).observe(stage);
+    new ResizeObserver(resize).observe(stage);
+    resize();
+    const motionPreference = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
+    let motion = !motionPreference.matches;
+    let animationTime = 0;
+    let spinAngle = -0.2;
+    const motionButton = document.querySelector("#motion");
+    function syncMotion() {
+      motionButton.setAttribute("aria-pressed", String(motion));
+      motionButton.setAttribute(
+        "aria-label",
+        motion ? "Pause floating motion" : "Resume floating motion",
+      );
+      motionButton.title = motion
+        ? "Pause floating motion"
+        : "Resume floating motion";
+      document.querySelector("#motion-icon").innerHTML = motion
+        ? '<path d="M7 5v10M13 5v10"/>'
+        : '<path d="m7 4 8 6-8 6Z"/>';
+    }
+    motionButton.addEventListener("click", () => {
+      motion = !motion;
+      syncMotion();
+    });
+    motionPreference.addEventListener("change", (event) => {
+      motion = !event.matches;
+      syncMotion();
+    });
+    syncMotion();
+    let lastTime = 0;
+    function animate(time) {
+      const delta = Math.min((time - lastTime) / 1000, 0.05);
+      lastTime = time;
+      if (!visible || document.hidden) return;
+      const blend = motionPreference.matches ? 1 : 1 - Math.exp(-delta * 12);
+      for (const key of Object.keys(current)) {
+        current[key] = THREE.MathUtils.lerp(current[key], state[key], blend);
+        if (Math.abs(current[key] - state[key]) < 0.0001)
+          current[key] = state[key];
+      }
+      reshape();
+      if (motion) {
+        animationTime += delta;
+        spinAngle += ((delta * current.spin) / 100) * 0.35;
+        const sway = current.sway / 100;
+        flower.position.y = Math.sin(animationTime * 1.1) * 0.09 * sway;
+        flower.rotation.z = Math.sin(animationTime * 0.75) * 0.065 * sway;
+        flower.rotation.x = Math.sin(animationTime * 0.55 + 1) * 0.035 * sway;
+        flower.rotation.y = spinAngle;
+      }
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    canvas.addEventListener("webglcontextlost", (event) => {
+      event.preventDefault();
+      showError("3D view lost. Reload the page.");
+      renderer.setAnimationLoop(null);
+    });
+    renderer.setAnimationLoop(animate);
+    // Expose a small read-only snapshot for diagnostics without exposing scene internals.
+    window.flowerSnapshot = () => ({
+      state: { ...state },
+      palette: palettes[paletteIndex].name,
+      petals: petals.length,
+      leaves: leaves.length,
+      motion,
+      geometries: renderer.info.memory.geometries,
+    });
+  }
+
+  function showError(message) {
+    const error = document.querySelector("#scene-error");
+    error.textContent = message;
+    error.hidden = false;
+  }
+
+  try {
+    startScene();
+  } catch (error) {
+    console.error(error);
+    showError("This flower needs WebGL. Try a browser with hardware acceleration.");
+  }
+})();
+
+</script>
+<script>
+(() => {
+"use strict";
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const NOTE_NAMES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
+const MAJORS = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5];
+const MINORS = [9, 4, 11, 6, 1, 8, 3, 10, 5, 0, 7, 2];
+const DEFAULT_CHORD = { root: 0, minor: false, extension: 'ninth', inversion: 0 };
+function chordNotes({ root, minor, extension, inversion }) {
+  let intervals = [0, minor ? 3 : 4, 7];
+  if (extension === 'seventh') intervals.push(minor ? 10 : 11);
+  if (extension === 'ninth') intervals.push(14);
+  if (extension === 'sus') intervals = [0, 5, 7];
+  const notes = intervals.map(n => 48 + root + n);
+  for (let i = 0; i < inversion; i++) notes.push(notes.shift() + 12);
+  return notes.sort((a, b) => a - b);
+}
+function chordLabel(chord) {
+  const suffix = { triad: '', seventh: chord.minor ? '7' : 'maj7', ninth: ' add9', sus: ' sus4' }[chord.extension];
+  return NOTE_NAMES[chord.root] + (chord.minor && chord.extension !== 'sus' ? 'm' : '') + suffix;
+}
+function degreeNote(degree, notes) {
+  const index = Math.max(0, degree - 1);
+  return notes[index % notes.length] + Math.floor(index / notes.length) * 12;
+}
+const laneIndex = (lane, step) => Math.floor(step / lane.division) % lane.length;
+const stepTime = (step, bpm, rate, swing) => (step + (step % 2 ? swing : 0)) * rate * 60 / bpm;
+const barIndex = (step, rate) => Math.floor((step * rate + 1e-8) / 4);
+const LANE_SPECS = {
+  note: { name: 'Note', description: 'Chord degree', min: 1, max: 8, values: [1, 2, 3, 5, 4, 3, 2, 4] },
+  gate: { name: 'Gate', description: 'Note length · %', min: 10, max: 100, values: [72, 36, 90, 52, 64, 72, 36, 90] },
+  velocity: { name: 'Velocity', description: 'Touch · %', min: 10, max: 100, values: [90, 50, 68, 44, 78, 55, 65, 90] },
+  octave: { name: 'Octave', description: 'Octave offset', min: -2, max: 2, values: [0, 0, 1, 0, 0, 0, 1, 0] },
+};
+function createLanes() {
+  return Object.fromEntries(Object.entries(LANE_SPECS).map(([key, spec]) => [key, {
+    ...spec, length: 8, division: 1,
+    values: Array.from({ length: 16 }, (_, i) => spec.values[i % spec.values.length]),
+    mutes: Array(16).fill(false),
+  }]));
+}
+
+
+// A short lookahead schedules notes against the audio clock, independent of paint.
+class Instrument extends EventTarget {
+  constructor(chord, lanes) {
+    super();
+    this.chord = { ...chord }; this.lanes = lanes;
+    this.bpm = 122; this.rate = .25; this.swing = 0; this.volume = 55;
+    this.muted = false; this.bypass = false; this.playing = false;
+    this.progression = []; this.voices = new Set(); this.events = [];
+    this.flower = { bloom: 78, petals: 9, curl: 35, height: 3.5, petalLength: 1.35, leafLength: 1.35, leafCount: 3, sway: 30, spin: 10 };
+    this.generation = 0; this.starting = false;
+  }
+  async ready() {
+    if (!this.context) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) throw new Error('This browser does not support Web Audio.');
+      const ctx = this.context = new AudioContext();
+      this.master = ctx.createGain(); this.master.gain.value = this.volume / 100 * .6;
+      this.compressor = ctx.createDynamicsCompressor();
+      this.compressor.threshold.value = -18; this.compressor.ratio.value = 5;
+      this.analyser = ctx.createAnalyser(); this.analyser.fftSize = 256;
+      this.master.connect(this.compressor).connect(this.analyser).connect(ctx.destination);
+      this.delay = ctx.createDelay(1); this.delay.delayTime.value = .23;
+      const feedback = ctx.createGain(); feedback.gain.value = .18;
+      const wet = ctx.createGain(); wet.gain.value = .17;
+      this.delay.connect(feedback).connect(this.delay);
+      this.delay.connect(wet).connect(this.master);
+      this.vibrato = ctx.createOscillator(); this.vibrato.frequency.value = 2.2;
+      this.vibratoDepth = ctx.createGain(); this.vibratoDepth.gain.value = 1.8;
+      this.vibrato.connect(this.vibratoDepth); this.vibrato.start();
+      ctx.addEventListener('statechange', () => {
+        if (ctx.state !== 'running' && this.playing) this.stop();
+      });
+    }
+    if (this.context.state !== 'running') await this.context.resume();
+    if (this.context.state !== 'running') throw new Error('Audio is paused. Tap play to try again.');
+  }
+  emit(name, detail) { this.dispatchEvent(new CustomEvent(name, { detail })); }
+  async start() {
+    if (this.playing || this.starting) return;
+    this.starting = true;
+    const generation = ++this.generation;
+    try {
+      await this.ready();
+      if (generation !== this.generation) return;
+      this.playing = true;
+      this.restart();
+      this.timer = window.setInterval(() => this.schedule(), 25);
+      this.emit('playback', true);
+    } finally { if (generation === this.generation) this.starting = false; }
+  }
+  stop() {
+    this.generation++; this.starting = false; this.playing = false;
+    this.auditionGeneration = (this.auditionGeneration || 0) + 1;
+    clearInterval(this.timer); this.events.length = 0; this.silence();
+    this.emit('playback', false);
+  }
+  restart() {
+    if (!this.playing) return;
+    this.silence('arp'); this.events.length = 0;
+    this.anchor = this.context.currentTime + .025; this.nextStep = 0;
+    this.lastBar = -1;
+    this.schedule();
+  }
+  schedule() {
+    if (!this.playing) return;
+    const now = this.context.currentTime;
+    const time = step => this.anchor + stepTime(step, this.bpm, this.rate, this.swing);
+    if (time(this.nextStep) < now - .2) {
+      this.nextStep = Math.max(0, Math.ceil((now - this.anchor) / (this.rate * 60 / this.bpm)));
+    }
+    while (time(this.nextStep) < now + .09) {
+      const step = this.nextStep++, when = Math.max(now, time(step));
+      const bar = barIndex(step, this.rate);
+      const chord = this.progression.length === 4 ? this.progression[bar % 4] : this.chord;
+      const notes = chordNotes(chord);
+      let midi = null;
+      if (this.bypass) {
+        if (bar !== this.lastBar) {
+          notes.forEach(note => this.note(note, when, 4 * 60 / this.bpm * .92, .65));
+          midi = notes[0];
+        }
+      } else {
+        const values = Object.fromEntries(Object.entries(this.lanes).map(([key, lane]) => {
+          const index = laneIndex(lane, step);
+          return [key, lane.mutes[index] ? null : lane.values[index]];
+        }));
+        if (Object.values(values).every(v => v !== null)) {
+          midi = clamp(degreeNote(values.note, notes) + values.octave * 12, 12, 108);
+          const duration = (time(step + 1) - time(step)) * values.gate / 100;
+          this.note(midi, when, duration, values.velocity / 100);
+        }
+      }
+      this.lastBar = bar;
+      this.events.push({ when, step, bar, chord, midi });
+    }
+  }
+  note(midi, when, duration, velocity, source = 'arp') {
+    const ctx = this.context, f = this.flower;
+    const count = clamp(Math.round((f.petals - 5) / 4) + 1, 1, 4);
+    const gain = ctx.createGain(), filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass'; filter.frequency.value = this.cutoff(); filter.Q.value = .5 + f.curl / 100 * 1.8;
+    gain.connect(filter); filter.connect(this.master); filter.connect(this.delay);
+    const attack = .006 + (f.petalLength - .65) * .026;
+    const decay = .06 + f.height * .045;
+    const release = .13 + f.height * .08;
+    const peak = velocity * .2;
+    const sustain = peak * (.12 + f.leafLength * .15);
+    const off = when + Math.max(attack + .005, duration);
+    gain.gain.setValueAtTime(0, when);
+    gain.gain.linearRampToValueAtTime(peak, when + attack);
+    const decayEnd = Math.min(when + attack + decay, off);
+    gain.gain.exponentialRampToValueAtTime(Math.max(.0001, sustain), decayEnd);
+    gain.gain.setValueAtTime(Math.max(.0001, sustain), off);
+    gain.gain.exponentialRampToValueAtTime(.0001, off + release);
+    const oscillators = [], mixers = [];
+    const voice = { gain, filter, oscillators, mixers, source, stopped: false };
+    for (let i = 0; i < count; i++) {
+      const osc = ctx.createOscillator(), mix = ctx.createGain();
+      const position = count === 1 ? 0 : i * 2 / (count - 1) - 1;
+      osc.type = i % 2 ? 'triangle' : 'sawtooth';
+      osc.frequency.value = 440 * 2 ** ((midi - 69) / 12);
+      osc.detune.value = position * f.curl / 100 * 18;
+      osc._position = position;
+      mix.gain.value = .65 / count;
+      this.vibratoDepth.connect(osc.detune);
+      osc.connect(mix).connect(gain); osc.start(when); osc.stop(off + release + .03);
+      oscillators.push(osc); mixers.push(mix);
+    }
+    const sub = ctx.createOscillator(), subMix = ctx.createGain();
+    sub.type = 'sine'; sub.frequency.value = 440 * 2 ** ((midi - 81) / 12);
+    subMix.gain.value = f.leafCount * .018;
+    sub.connect(subMix).connect(gain); sub.start(when); sub.stop(off + release + .03);
+    oscillators.push(sub); mixers.push(subMix);
+    this.voices.add(voice);
+    sub.onended = () => {
+      for (const osc of oscillators) {
+        if (osc !== sub) this.vibratoDepth.disconnect(osc.detune);
+        osc.disconnect();
+      }
+      mixers.forEach(mix => mix.disconnect()); gain.disconnect(); filter.disconnect();
+      this.voices.delete(voice);
+    };
+  }
+  silence(source) {
+    if (!this.context) return;
+    const now = this.context.currentTime;
+    for (const voice of this.voices) {
+      if ((source && voice.source !== source) || voice.stopped) continue;
+      voice.stopped = true;
+      voice.gain.gain.cancelScheduledValues(now);
+      voice.gain.gain.setTargetAtTime(.0001, now, .008);
+      voice.oscillators.forEach(osc => osc.stop(now + .045));
+    }
+  }
+  async audition(chord) {
+    const generation = this.auditionGeneration = (this.auditionGeneration || 0) + 1;
+    await this.ready();
+    if (generation !== this.auditionGeneration) return;
+    this.silence('audition');
+    chordNotes(chord).forEach(midi => this.note(midi, this.context.currentTime + .01, .65, .65, 'audition'));
+  }
+  cutoff() { return 180 + (this.flower.bloom / 100) ** 2 * 10000; }
+  setFlower(state) {
+    Object.assign(this.flower, state);
+    if (!this.context) return;
+    const now = this.context.currentTime;
+    this.vibratoDepth.gain.setTargetAtTime(this.flower.sway / 100 * 6, now, .04);
+    this.vibrato.frequency.setTargetAtTime(.7 + this.flower.spin / 100 * 5, now, .04);
+    for (const voice of this.voices) {
+      voice.filter.frequency.setTargetAtTime(this.cutoff(), now, .03);
+      voice.filter.Q.setTargetAtTime(.5 + this.flower.curl / 100 * 1.8, now, .03);
+      voice.oscillators.forEach(osc => {
+        if (osc._position !== undefined) osc.detune.setTargetAtTime(osc._position * this.flower.curl / 100 * 18, now, .02);
+      });
+    }
+  }
+  setVolume() {
+    this.master?.gain.setTargetAtTime(this.muted ? 0 : this.volume / 100 * .6, this.context.currentTime, .025);
+  }
+  updateVisuals() {
+    if (!this.context) return;
+    let latest;
+    while (this.events.length && this.events[0].when <= this.context.currentTime) latest = this.events.shift();
+    if (latest) this.emit('step', latest);
+  }
+}
+
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const announce = text => { $('#announcement').textContent = text; };
+const chord = { ...DEFAULT_CHORD };
+const lanes = createLanes();
+const instrument = new Instrument(chord, lanes);
+let selectedLane = 'note', linked = true, currentView = 0;
+let progression = [], capturing = false, captureBackup = [], lastStep = -1;
+const error = reason => {
+  $('#audio-error').textContent = `Couldn't start sound. ${reason.message || 'Tap play to try again.'}`;
+  $('#audio-error').hidden = false;
+};
+const attempt = async action => {
+  try { await action(); $('#audio-error').hidden = true; } catch (reason) { error(reason); }
+};
+
+// Native scroll snapping preserves momentum, swiping, and independent vertical scroll.
+const carousel = $('.carousel');
+function syncView(index) {
+  currentView = index;
+  $$('[data-view]').forEach(button => {
+    if (+button.dataset.view === index) button.setAttribute('aria-current', 'page');
+    else button.removeAttribute('aria-current');
+  });
+  $$('.view').forEach((view, i) => { view.inert = i !== index; });
+  $('#previous-view').disabled = index === 0;
+  $('#next-view').disabled = index === 2;
+}
+function goTo(index) {
+  index = clamp(index, 0, 2);
+  carousel.scrollTo({ left: index * carousel.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+}
+$$('[data-view]').forEach(button => button.addEventListener('click', () => goTo(+button.dataset.view)));
+$('#previous-view').addEventListener('click', () => goTo(currentView - 1));
+$('#next-view').addEventListener('click', () => goTo(currentView + 1));
+let scrollFrame;
+carousel.addEventListener('scroll', () => {
+  if (scrollFrame) return;
+  scrollFrame = requestAnimationFrame(() => {
+    scrollFrame = null;
+    const index = Math.round(carousel.scrollLeft / carousel.clientWidth);
+    if (index !== currentView) syncView(index);
+  });
+}, { passive: true });
+let previousWidth = carousel.clientWidth;
+new ResizeObserver(() => {
+  if (previousWidth === carousel.clientWidth) return;
+  previousWidth = carousel.clientWidth;
+  carousel.scrollTo({ left: currentView * previousWidth, behavior: 'instant' });
+}).observe(carousel);
+carousel.addEventListener('keydown', event => {
+  if (event.target !== carousel) return;
+  if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+    event.preventDefault(); goTo(currentView + (event.key === 'ArrowRight' ? 1 : -1));
+  }
+});
+$('.view-tabs').addEventListener('keydown', event => {
+  const index = +event.target.dataset.view;
+  if (!Number.isFinite(index)) return;
+  let next;
+  if (event.key === 'ArrowRight') next = (index + 1) % 3;
+  if (event.key === 'ArrowLeft') next = (index + 2) % 3;
+  if (event.key === 'Home') next = 0;
+  if (event.key === 'End') next = 2;
+  if (next !== undefined) { event.preventDefault(); goTo(next); $(`.view-tabs [data-view="${next}"]`).focus(); }
+});
+
+const svg = (tag, attrs) => {
+  const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
+  return element;
+};
+function ringPath(inner, outer, start, end) {
+  const p = (r, a) => [170 + Math.cos(a) * r, 170 + Math.sin(a) * r];
+  return `M${p(outer,start)}A${outer},${outer} 0 0 1 ${p(outer,end)}L${p(inner,end)}A${inner},${inner} 0 0 0 ${p(inner,start)}Z`;
+}
+[MAJORS, MINORS].forEach((roots, mode) => roots.forEach((root, i) => {
+  const angle = -Math.PI / 2 + i * Math.PI / 6;
+  const path = svg('path', {
+    d: ringPath(mode ? 68 : 116, mode ? 116 : 163, angle - Math.PI / 12, angle + Math.PI / 12),
+    'data-root': root, 'data-minor': mode, 'aria-label': `${NOTE_NAMES[root]} ${mode ? 'minor' : 'major'}`,
+    'aria-pressed': 'false', role: 'button', tabindex: '0',
+  });
+  path.addEventListener('click', () => chooseChord(root, !!mode));
+  path.addEventListener('keydown', event => {
+    if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); chooseChord(root, !!mode); }
+    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+      event.preventDefault();
+      const nextRoot = roots[(i + (event.key === 'ArrowRight' ? 1 : 11)) % 12];
+      $(`#wheel path[data-root="${nextRoot}"][data-minor="${mode}"]`).focus();
+    }
+  });
+  const label = svg('text', { x:170 + Math.cos(angle)*(mode ? 92 : 140), y:170 + Math.sin(angle)*(mode ? 92 : 140), class:mode ? 'minor' : 'major', 'data-label': `${root}-${mode}` });
+  label.textContent = NOTE_NAMES[root] + (mode ? 'm' : '');
+  $('#wheel').append(path, label);
+}));
+$('#wheel').append(svg('circle', { cx:170, cy:170, r:166, class:'wheel-outline' }));
+function renderChord(config = chord) {
+  displayedChord = { ...config };
+  $$('#wheel path').forEach(path => path.setAttribute('aria-pressed', String(+path.dataset.root === config.root && !!+path.dataset.minor === config.minor)));
+  $$('#wheel text').forEach(label => label.classList.toggle('selected', label.dataset.label === `${config.root}-${+config.minor}`));
+  $('#chord-name').textContent = NOTE_NAMES[config.root] + (config.minor && config.extension !== 'sus' ? 'm' : '');
+  $('#chord-quality').textContent = { triad: config.minor ? 'minor' : 'major', seventh:config.minor ? '7' : 'maj7', ninth:'add9', sus:'sus4' }[config.extension];
+  $('#extension').value = config.extension; $('#voicing').value = config.inversion;
+  const pattern = $('#pattern').selectedOptions[0].textContent.toLowerCase();
+  $('#playing-chord').replaceChildren(document.createTextNode(chordLabel(config) + ' '));
+  const detail = document.createElement('span');
+  detail.textContent = `· ${instrument.bypass ? 'held chord' : pattern}`;
+  $('#playing-chord').append(detail);
+  $('#audition').setAttribute('aria-label', `Audition ${chordLabel(config)}`);
+}
+function chooseChord(root, minor) {
+  Object.assign(chord, { root, minor, extension: $('#extension').value, inversion: +$('#voicing').value });
+  instrument.chord = { ...chord };
+  if (capturing) {
+    progression.push({ ...chord });
+    if (progression.length === 4) {
+      capturing = false; instrument.progression = progression.map(c => ({ ...c }));
+      if (instrument.playing) instrument.restart();
+      else attempt(() => instrument.start());
+      announce('Four chords captured. Progression looping.');
+    } else announce(`Chord ${progression.length} captured. Choose ${4 - progression.length} more.`);
+  } else {
+    instrument.progression = [];
+    if (instrument.bypass) instrument.restart();
+  }
+  renderChord(); renderProgression();
+  if (!instrument.playing && !instrument.starting) audition();
+}
+let auditionTimeout;
+function audition() {
+  $('#audition').classList.add('auditioning');
+  clearTimeout(auditionTimeout);
+  auditionTimeout = setTimeout(() => $('#audition').classList.remove('auditioning'), 650);
+  return attempt(() => instrument.audition(instrument.playing && instrument.progression.length ? displayedChord : chord));
+}
+let displayedChord = chord;
+$('#audition').addEventListener('click', audition);
+['extension', 'voicing'].forEach(id => $(`#${id}`).addEventListener('change', () => {
+  Object.assign(chord, displayedChord);
+  chord.extension = $('#extension').value; chord.inversion = +$('#voicing').value;
+  instrument.chord = { ...chord }; instrument.progression = [];
+  renderChord(); renderProgression();
+  if (!instrument.playing) audition(); else if (instrument.bypass) instrument.restart();
+}));
+const loopButton = document.createElement('button');
+loopButton.id = 'loop-progression'; loopButton.type = 'button'; loopButton.textContent = '↻ Loop'; loopButton.hidden = true;
+loopButton.setAttribute('aria-pressed', 'false');
+$('#clear-progression').before(loopButton);
+loopButton.addEventListener('click', () => {
+  if (instrument.progression.length) {
+    Object.assign(chord, displayedChord); instrument.chord = { ...chord };
+  }
+  instrument.progression = instrument.progression.length ? [] : progression.map(c => ({ ...c }));
+  if (instrument.playing) instrument.restart();
+  else if (instrument.progression.length) attempt(() => instrument.start());
+  renderProgression();
+});
+function renderProgression(active = -1) {
+  $('#capture').setAttribute('aria-pressed', String(capturing));
+  $('#capture span').textContent = capturing ? `${progression.length} / 4 · Cancel` : 'Record 4';
+  $$('[data-slot]').forEach((slot, i) => {
+    const config = progression[i];
+    slot.classList.toggle('filled', !!config);
+    slot.classList.toggle('active', i === active && instrument.progression.length === 4);
+    slot.classList.toggle('record-next', capturing && i === progression.length);
+    slot.querySelector('strong').textContent = config ? chordLabel(config) : '＋';
+    slot.setAttribute('aria-label', config ? `Progression slot ${i + 1}, ${chordLabel(config)}` : `Progression slot ${i + 1}, empty`);
+  });
+  $('#clear-progression').hidden = !progression.length || capturing;
+  loopButton.hidden = progression.length !== 4 || capturing;
+  loopButton.setAttribute('aria-pressed', String(instrument.progression.length === 4));
+  $('#progression-hint').textContent = capturing ? 'Tap the wheel to plant your next chord.' : instrument.progression.length ? 'One chord, every four beats.' : progression.length === 4 ? 'Your progression is saved for this session.' : 'Record four chords to make them loop.';
+}
+function beginCapture() {
+  if (capturing) { progression = captureBackup; capturing = false; announce('Recording cancelled.'); }
+  else { captureBackup = [...progression]; progression = []; capturing = true; instrument.progression = []; announce('Choose four chords on the wheel.'); }
+  renderProgression();
+}
+$('#capture').addEventListener('click', beginCapture);
+$('#clear-progression').addEventListener('click', () => {
+  Object.assign(chord, displayedChord); instrument.chord = { ...chord };
+  progression = []; instrument.progression = [];
+  if (instrument.bypass) instrument.restart();
+  renderProgression(); announce('Progression cleared.');
+});
+$$('[data-slot]').forEach(slot => slot.addEventListener('click', () => {
+  const config = progression[+slot.dataset.slot];
+  if (!config) { if (!capturing) beginCapture(); return; }
+  if (capturing) return;
+  Object.assign(chord, config); instrument.chord = { ...config }; instrument.progression = [];
+  renderChord(); renderProgression();
+  if (instrument.bypass) instrument.restart();
+  if (!instrument.playing) audition();
+}));
+
+function renderLane() {
+  const lane = lanes[selectedLane];
+  $$('.lane-tabs button').forEach(button => {
+    const selected = button.dataset.lane === selectedLane;
+    button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1;
+  });
+  $('#lane-panel').setAttribute('aria-labelledby', `tab-${selectedLane}`);
+  $('#lane-description').textContent = lane.description;
+  $('#lane-range').textContent = `${lane.min} — ${lane.max}`;
+  $('#step-graph').replaceChildren(); $('#step-mutes').replaceChildren();
+  for (let i = 0; i < lane.length; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'step-cell'; cell.tabIndex = 0; cell.dataset.step = i;
+    cell.setAttribute('role', 'slider'); cell.setAttribute('aria-orientation', 'vertical');
+    cell.setAttribute('aria-label', `${lane.name} step ${i + 1}`);
+    cell.setAttribute('aria-valuemin', lane.min); cell.setAttribute('aria-valuemax', lane.max);
+    cell.innerHTML = '<div class="step-bar"><span class="step-value"></span></div>';
+    cell.addEventListener('keydown', event => {
+      let value = lane.values[i];
+      if (event.key === 'ArrowUp' || event.key === 'ArrowRight') value++;
+      else if (event.key === 'ArrowDown' || event.key === 'ArrowLeft') value--;
+      else if (event.key === 'Home') value = lane.min;
+      else if (event.key === 'End') value = lane.max;
+      else if (event.key === ' ' || event.key === 'Enter') {
+        event.preventDefault(); lane.mutes[i] = !lane.mutes[i]; syncCell(i); return;
+      } else return;
+      event.preventDefault(); setStep(i, clamp(value, lane.min, lane.max));
+    });
+    $('#step-graph').append(cell);
+    const mute = document.createElement('button');
+    mute.type = 'button'; mute.dataset.step = i; mute.innerHTML = `<i></i><span>${String(i + 1).padStart(2, '0')}</span>`;
+    mute.addEventListener('click', () => { lane.mutes[i] = !lane.mutes[i]; syncCell(i); });
+    $('#step-mutes').append(mute); syncCell(i);
+  }
+  $('#lane-length').value = lane.length; $('#length-out').value = lane.length;
+  $('#lane-division').value = lane.division; $('#step-count').textContent = `${lane.length} steps`;
+  $('#lane-length').setAttribute('aria-label', `${lane.name} lane length`);
+  updateRange($('#lane-length')); updatePlayhead();
+}
+function syncCell(i) {
+  const lane = lanes[selectedLane], value = lane.values[i];
+  const cell = $(`#step-graph [data-step="${i}"]`), mute = $(`#step-mutes [data-step="${i}"]`);
+  if (!cell || !mute) return;
+  cell.setAttribute('aria-valuenow', value);
+  cell.setAttribute('aria-valuetext', `${value}${lane.mutes[i] ? ', muted' : ''}`);
+  cell.classList.toggle('muted', lane.mutes[i]);
+  cell.querySelector('.step-bar').style.height = `${10 + (value - lane.min) / (lane.max - lane.min) * 84}%`;
+  cell.querySelector('.step-value').textContent = value;
+  mute.setAttribute('aria-pressed', String(!lane.mutes[i]));
+  mute.setAttribute('aria-label', `${lane.mutes[i] ? 'Enable' : 'Mute'} ${lane.name.toLowerCase()} step ${i + 1}`);
+}
+function setStep(i, value) {
+  lanes[selectedLane].values[i] = value;
+  if (selectedLane === 'note') { $('#pattern').value = 'custom'; renderChord(displayedChord); }
+  syncCell(i);
+}
+const graph = $('#step-graph'); let drawing = null;
+function drawStep(event) {
+  const rect = graph.getBoundingClientRect(), lane = lanes[selectedLane];
+  const index = clamp(Math.floor((event.clientX - rect.left) / rect.width * lane.length), 0, lane.length - 1);
+  const amount = clamp((rect.bottom - event.clientY) / rect.height, 0, 1);
+  setStep(index, Math.round(lane.min + amount * (lane.max - lane.min)));
+}
+graph.addEventListener('pointerdown', event => {
+  if (event.button !== 0) return;
+  event.preventDefault(); drawing = event.pointerId; graph.setPointerCapture(event.pointerId); drawStep(event);
+});
+graph.addEventListener('pointermove', event => { if (event.pointerId === drawing) drawStep(event); });
+const endDrawing = () => { drawing = null; };
+graph.addEventListener('pointerup', endDrawing); graph.addEventListener('pointercancel', endDrawing); graph.addEventListener('lostpointercapture', endDrawing);
+$$('[data-lane]').forEach(button => button.addEventListener('click', () => { selectedLane = button.dataset.lane; renderLane(); }));
+$('.lane-tabs').addEventListener('keydown', event => {
+  const ids = Object.keys(lanes), index = ids.indexOf(selectedLane); let next;
+  if (event.key === 'ArrowRight') next = (index + 1) % 4;
+  if (event.key === 'ArrowLeft') next = (index + 3) % 4;
+  if (event.key === 'Home') next = 0;
+  if (event.key === 'End') next = 3;
+  if (next !== undefined) { event.preventDefault(); selectedLane = ids[next]; renderLane(); $(`#tab-${selectedLane}`).focus(); }
+});
+$('#lane-length').addEventListener('input', event => {
+  const length = +event.target.value;
+  if (linked) Object.values(lanes).forEach(lane => { lane.length = length; });
+  else lanes[selectedLane].length = length;
+  renderLane();
+});
+$('#lane-division').addEventListener('change', event => { lanes[selectedLane].division = +event.target.value; });
+$('#link-lengths').addEventListener('click', () => {
+  linked = !linked; $('#link-lengths').setAttribute('aria-pressed', String(linked));
+  $('#link-lengths span').textContent = linked ? 'Linked' : 'Unlinked';
+  if (linked) Object.values(lanes).forEach(lane => { lane.length = lanes[selectedLane].length; });
+});
+$('#randomize-lane').addEventListener('click', () => {
+  const lane = lanes[selectedLane];
+  for (let i = 0; i < lane.length; i++) lane.values[i] = Math.floor(lane.min + Math.random() * (lane.max - lane.min + 1));
+  if (selectedLane === 'note') { $('#pattern').value = 'custom'; renderChord(displayedChord); }
+  renderLane(); announce(`${lane.name} lane randomized.`);
+});
+$('#pattern').addEventListener('change', event => {
+  const patterns = { bloom:[1,2,3,5,4,3,2,4], up:[1,2,3,4,5,6,7,8], down:[8,7,6,5,4,3,2,1], drift:[1,4,2,6,3,8,5,2] };
+  const pattern = patterns[event.target.value];
+  if (pattern) lanes.note.values = Array.from({length:16}, (_, i) => pattern[i % 8]);
+  renderLane(); renderChord(displayedChord);
+});
+$('#rate').addEventListener('change', event => { instrument.rate = +event.target.value; instrument.restart(); });
+$('#swing').addEventListener('input', event => { instrument.swing = +event.target.value / 100; $('#swing-out').value = `${event.target.value}%`; instrument.restart(); });
+$('#arp-bypass').addEventListener('click', () => {
+  instrument.bypass = !instrument.bypass;
+  $('#arp-bypass').setAttribute('aria-pressed', String(instrument.bypass));
+  $('#arp-bypass').setAttribute('aria-label', instrument.bypass ? 'Enable arpeggiator' : 'Bypass arpeggiator');
+  instrument.restart(); renderChord(displayedChord);
+});
+
+function updateRange(input) { input.style.setProperty('--fill', `${(+input.value - +input.min) / (+input.max - +input.min) * 100}%`); }
+$$('input[type=range]').forEach(input => { updateRange(input); input.addEventListener('input', () => updateRange(input)); });
+$('#play').addEventListener('click', () => {
+  if (instrument.playing || instrument.starting) instrument.stop();
+  else attempt(() => instrument.start());
+});
+document.addEventListener('keydown', event => {
+  if (event.code !== 'Space' || /INPUT|SELECT|TEXTAREA|BUTTON|A/.test(event.target.tagName) || event.target.getAttribute('role') === 'slider' || event.target.getAttribute('role') === 'button') return;
+  event.preventDefault(); $('#play').click();
+});
+$('#tempo').addEventListener('change', event => {
+  const bpm = clamp(Math.round(+event.target.value || 122), 40, 240);
+  event.target.value = bpm; instrument.bpm = bpm; instrument.restart();
+});
+$('#volume').addEventListener('input', event => { instrument.volume = +event.target.value; instrument.setVolume(); });
+$('#mute').addEventListener('click', () => {
+  instrument.muted = !instrument.muted; instrument.setVolume();
+  $('#mute').setAttribute('aria-pressed', String(instrument.muted));
+  $('#mute').setAttribute('aria-label', instrument.muted ? 'Unmute' : 'Mute');
+});
+window.addEventListener('flura:flower', event => instrument.setFlower(event.detail));
+if (window.flowerSnapshot) instrument.setFlower(window.flowerSnapshot().state);
+function updatePlayhead() {
+  const index = lastStep < 0 || instrument.bypass ? -1 : laneIndex(lanes[selectedLane], lastStep);
+  $$('#step-graph .step-cell, #step-mutes button').forEach(cell => cell.classList.toggle('playing', +cell.dataset.step === index));
+}
+instrument.addEventListener('step', ({ detail }) => {
+  lastStep = detail.step; displayedChord = detail.chord;
+  updatePlayhead();
+  if (instrument.progression.length === 4) { renderChord(detail.chord); renderProgression(detail.bar % 4); }
+});
+instrument.addEventListener('playback', ({ detail: playing }) => {
+  $('#play').setAttribute('aria-pressed', String(playing)); $('#play').setAttribute('aria-label', playing ? 'Stop' : 'Play');
+  $('#play-icon').setAttribute('d', playing ? 'M7 5h4v14H7ZM14 5h4v14h-4Z' : 'm9 5 11 7-11 7Z');
+  $('#play-status').textContent = playing ? 'A little sound, growing' : 'Ready when you are';
+  if (!playing) { lastStep = -1; updatePlayhead(); renderProgression(); }
+});
+
+const scope = $('#scope'), scopeContext = scope.getContext('2d'), samples = new Uint8Array(256);
+function frame() {
+  instrument.updateVisuals();
+  const ctx = instrument.context;
+  const beat = instrument.playing ? Math.max(0, Math.floor((ctx.currentTime - instrument.anchor) * instrument.bpm / 60)) % 4 : -1;
+  $$('.beat-dots i').forEach((dot, i) => dot.classList.toggle('active', i === beat));
+  scopeContext.clearRect(0, 0, scope.width, scope.height);
+  scopeContext.beginPath(); scopeContext.strokeStyle = '#879577'; scopeContext.lineWidth = 1.5;
+  if (instrument.analyser) instrument.analyser.getByteTimeDomainData(samples); else samples.fill(128);
+  for (let i = 0; i < samples.length; i++) {
+    const x = i / (samples.length - 1) * scope.width, y = scope.height / 2 + (samples[i] - 128) / 128 * scope.height * 3.4;
+    if (i === 0) scopeContext.moveTo(x, y); else scopeContext.lineTo(x, y);
+  }
+  scopeContext.stroke(); requestAnimationFrame(frame);
+}
+renderChord(); renderLane(); renderProgression(); requestAnimationFrame(frame);
+window.fluraSnapshot = () => ({ playing:instrument.playing, audioState:instrument.context?.state ?? 'uninitialized', bpm:instrument.bpm, rate:instrument.rate, swing:instrument.swing, bypass:instrument.bypass, muted:instrument.muted, volume:instrument.volume, voices:instrument.voices.size, selectedView:currentView, chord:{...chord}, progression:progression.map(c => ({...c})), looping:instrument.progression.length === 4, capturing, selectedLane, linked, lanes:structuredClone(lanes), lastStep, flower:window.flowerSnapshot?.() });
+window.addEventListener('pagehide', () => instrument.stop());
+
+})();
+</script>
 </body>
 </html>
