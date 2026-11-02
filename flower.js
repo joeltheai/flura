@@ -131,52 +131,17 @@
       ],
     },
   ];
-  const palettes = [
-    {
-      name: "Terracotta",
-      petals: ["#e78b7d", "#dd766b", "#f1a094"],
-      center: "#e5b546",
-      seed: "#b77d28",
-      leaf: "#729577",
-      stem: "#688267",
-    },
-    {
-      name: "Buttercup",
-      petals: ["#edc668", "#dfb54d", "#f5d782"],
-      center: "#92613f",
-      seed: "#694e34",
-      leaf: "#769376",
-      stem: "#657e61",
-    },
-    {
-      name: "Lilac",
-      petals: ["#b3a0cc", "#9f89bc", "#c6b5dd"],
-      center: "#e4bd60",
-      seed: "#aa823d",
-      leaf: "#7e9a88",
-      stem: "#668270",
-    },
-    {
-      name: "Cloud",
-      petals: ["#f0e9db", "#e0d8c7", "#fff9ec"],
-      center: "#d9af47",
-      seed: "#9e7d30",
-      leaf: "#7f9777",
-      stem: "#6c8061",
-    },
-    {
-      name: "Rose",
-      petals: ["#d98f9e", "#c9768c", "#e9a4b2"],
-      center: "#e4c16b",
-      seed: "#ae9141",
-      leaf: "#7e9c83",
-      stem: "#64816c",
-    },
-  ];
+  const palette = {
+    name: "Monochrome",
+    petals: ["#c8c8c8", "#dddddd", "#b8b8b8"],
+    center: "#999999",
+    seed: "#333333",
+    leaf: "#888888",
+    stem: "#aaaaaa",
+  };
 
   const state = { ...DEFAULTS };
   const current = { ...DEFAULTS };
-  let paletteIndex = 0;
   const inputs = new Map();
   const outputs = new Map();
   const sliderContainer = document.querySelector("#slider-controls");
@@ -225,40 +190,11 @@
     sliderContainer.append(group);
   });
 
-  const paletteButtons = palettes.map((palette, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "palette";
-    button.setAttribute("aria-label", `${palette.name} palette`);
-    button.title = palette.name;
-    button.style.setProperty("--swatch", palette.petals[0]);
-    button.setAttribute("aria-pressed", String(index === paletteIndex));
-    button.innerHTML = "<span></span>";
-    button.addEventListener("click", () => selectPalette(index));
-    document.querySelector("#palettes").append(button);
-    return button;
-  });
-
   let materials;
-  function selectPalette(index) {
-    paletteIndex = index;
-    document.querySelector("#palette-name").textContent = palettes[index].name.toUpperCase();
-    paletteButtons.forEach((button, i) =>
-      button.setAttribute("aria-pressed", String(i === index)),
-    );
-    if (!materials) return;
-    const palette = palettes[index];
-    materials.petals.forEach((material, i) =>
-      material.color.set(palette.petals[i]),
-    );
-    for (const key of ["center", "seed", "leaf", "stem"])
-      materials[key].color.set(palette[key]);
-  }
 
   document.querySelector("#reset").addEventListener("click", () => {
     Object.assign(state, DEFAULTS);
     for (const key of Object.keys(state)) syncControl(key, state[key]);
-    selectPalette(0);
     announcement.textContent = "Flower reset.";
   });
   document.querySelector("#randomize").addEventListener("click", () => {
@@ -285,11 +221,7 @@
       );
       syncControl(key, state[key]);
     }
-    selectPalette(
-      (paletteIndex + 1 + Math.floor(Math.random() * (palettes.length - 1))) %
-        palettes.length,
-    );
-    announcement.textContent = `New ${palettes[paletteIndex].name.toLowerCase()} flower.`;
+    announcement.textContent = "Flower randomized.";
   });
 
   // Leaves and sepals have a softly ridged face, an underside, and an edge.
@@ -370,7 +302,7 @@
       alpha: true,
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
-    renderer.setClearColor(0xf5f3ec, 0);
+    renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
@@ -386,7 +318,8 @@
       controls.enabled = !controls.enabled;
       canvas.classList.toggle("interactive", controls.enabled);
       rotateButton.setAttribute("aria-pressed", String(controls.enabled));
-      rotateButton.querySelector("span").textContent = controls.enabled ? "Done" : "Rotate";
+      rotateButton.setAttribute("aria-label", controls.enabled ? "Finish rotating flower" : "Rotate flower");
+      rotateButton.title = controls.enabled ? "Finish rotating flower" : "Rotate flower";
       canvas.setAttribute("aria-label", controls.enabled ? "3D flower. Drag to rotate, pinch to zoom. Choose Done to swipe views." : "Floating 3D flower");
       announcement.textContent = controls.enabled ? "Drag the flower to rotate. Choose Done to swipe between views." : "Rotation off. Swipe to explore.";
     });
@@ -398,11 +331,11 @@
     document
       .querySelector("#reset-view")
       .addEventListener("click", () => controls.reset());
-    scene.add(new THREE.HemisphereLight(0xfffaf0, 0xabb5a1, 2.6));
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x555555, 2.6));
     const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
     keyLight.position.set(-3, 7, 5);
     scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0xffe5d3, 0.6);
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
     fillLight.position.set(5, 1, -3);
     scene.add(fillLight);
 
@@ -421,7 +354,6 @@
         gradientMap: gradient,
         side: THREE.DoubleSide,
       });
-    const palette = palettes[paletteIndex];
     materials = {
       petals: palette.petals.map(material),
       center: material(palette.center),
@@ -674,7 +606,7 @@
     // Expose a small read-only snapshot for diagnostics without exposing scene internals.
     window.flowerSnapshot = () => ({
       state: { ...state },
-      palette: palettes[paletteIndex].name,
+      palette: palette.name,
       petals: petals.length,
       leaves: leaves.length,
       motion,
