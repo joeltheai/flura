@@ -42,12 +42,34 @@
     <section class="view flower-view" aria-label="Flower" data-page="2" inert>
       <div class="instrument">
         <div class="stage"><canvas id="flower-canvas" aria-label="Floating 3D flower" tabindex="-1"></canvas><div class="view-tools"><button id="motion" class="icon-button" type="button" aria-label="Pause floating motion" aria-pressed="true" title="Pause floating motion"><svg id="motion-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button><button id="rotate-flower" class="icon-button" type="button" aria-label="Rotate flower" title="Rotate flower" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><ellipse cx="10" cy="10" rx="8" ry="3.5"/><path d="m14 5 3 3-4 1"/></svg></button><button id="reset-view" class="icon-button" type="button" aria-label="Reset camera view" title="Reset camera view"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 0 5M4 3v5h5"/></svg></button></div><p id="scene-error" role="alert" hidden></p></div>
-        <div id="slider-controls" class="flower-controls"></div>
-        <div class="flower-actions"><button type="button" id="randomize" class="icon-button" aria-label="Randomize flower" title="Randomize flower"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m14 3 3 3-3 3M3 6h14M6 11l-3 3 3 3m-3-3h14"/></svg></button><button type="button" id="reset" class="icon-button" aria-label="Reset flower" title="Reset flower"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 0 5M4 3v5h5"/></svg></button></div>
+        <div class="waves" role="group" aria-label="Oscillator waveform">
+          <button type="button" data-wave="sawtooth" aria-label="Sawtooth" aria-pressed="true" title="Sawtooth"><svg viewBox="0 0 30 16" aria-hidden="true"><path d="M2 13 10 3v10L18 3v10l8-10"/></svg></button>
+          <button type="button" data-wave="sine" aria-label="Sine" aria-pressed="false" title="Sine"><svg viewBox="0 0 30 16" aria-hidden="true"><path d="M2 8Q8-3 14 8T26 8"/></svg></button>
+          <button type="button" data-wave="triangle" aria-label="Triangle" aria-pressed="false" title="Triangle"><svg viewBox="0 0 30 16" aria-hidden="true"><path d="m2 13 6-10 6 10 6-10 6 10"/></svg></button>
+          <button type="button" data-wave="square" aria-label="Square" aria-pressed="false" title="Square"><svg viewBox="0 0 30 16" aria-hidden="true"><path d="M2 13V3h8v10h8V3h8"/></svg></button>
+        </div>
+        <div id="synth-controls" class="synth-controls"></div>
+        <div class="flower-actions"><button type="button" id="randomize" class="icon-button" aria-label="Randomize synth" title="Randomize synth"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m14 3 3 3-3 3M3 6h14M6 11l-3 3 3 3m-3-3h14"/></svg></button><button type="button" id="reset" class="icon-button" aria-label="Reset synth" title="Reset synth"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 0 5M4 3v5h5"/></svg></button></div>
+      </div>
+    </section>
+    <section class="view envelope-view" aria-label="ADSR envelope" data-page="3" inert>
+      <div class="instrument">
+        <svg id="envelope" viewBox="0 0 360 210" aria-label="ADSR envelope. Drag the attack, decay, sustain, and release points.">
+          <g class="env-grid" aria-hidden="true"><path d="M20 28H340M20 64H340M20 100H340M20 136H340M20 172H340M20 28V172M100 28V172M180 28V172M260 28V172M340 28V172"/></g>
+          <path id="env-area" aria-hidden="true" />
+          <g id="env-guides" aria-hidden="true"></g>
+          <path id="env-line" aria-hidden="true" />
+          <path id="env-playhead" aria-hidden="true" hidden />
+          <circle id="env-activity" r="3" aria-hidden="true" hidden />
+          <g id="env-handles"></g>
+          <g id="env-labels" aria-hidden="true"></g>
+        </svg>
+        <div id="envelope-controls" class="envelope-controls"></div>
+        <div class="envelope-actions"><button type="button" id="audition-envelope" class="icon-button" aria-label="Audition envelope" title="Audition envelope"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 10 7-10 7Z"/></svg></button><button type="button" id="reset-envelope" class="icon-button" aria-label="Reset ADSR envelope" title="Reset ADSR envelope"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 0 5M4 3v5h5"/></svg></button></div>
       </div>
     </section>
   </main>
-  <nav class="carousel-wayfinding" aria-label="Instrument views"><button type="button" id="previous-view" aria-label="Previous view" disabled>←</button><div class="view-tabs carousel-dots"><button type="button" data-view="0" aria-label="Chords view" aria-current="page"></button><button type="button" data-view="1" aria-label="Arp view"></button><button type="button" data-view="2" aria-label="Flower view"></button></div><button type="button" id="next-view" aria-label="Next view">→</button></nav>
+  <nav class="carousel-wayfinding" aria-label="Instrument views"><button type="button" id="previous-view" aria-label="Previous view" disabled>←</button><div class="view-tabs carousel-dots"><button type="button" data-view="0" aria-label="Chords view" aria-current="page"></button><button type="button" data-view="1" aria-label="Arp view"></button><button type="button" data-view="2" aria-label="Flower view"></button><button type="button" data-view="3" aria-label="ADSR view"></button></div><button type="button" id="next-view" aria-label="Next view">→</button></nav>
   <div id="announcement" class="sr-only" aria-live="polite"></div>
   <p id="audio-error" role="alert" hidden></p>
 </div>
@@ -55,6 +77,7 @@
 <script src="music.js"></script>
 <script src="audio.js"></script>
 <script src="flower.js"></script>
+<script src="synth.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

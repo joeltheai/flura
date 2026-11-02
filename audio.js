@@ -11,7 +11,7 @@ class Instrument extends EventTarget {
     this.bpm = 122; this.rate = .25; this.swing = 0; this.volume = 55;
     this.muted = false; this.bypass = false; this.playing = false;
     this.progression = []; this.voices = new Set(); this.events = [];
-    this.flower = { bloom: 78, petals: 9, curl: 35, height: 3.5, petalLength: 1.35, leafLength: 1.35, leafCount: 3, sway: 30, spin: 10 };
+    this.synth = { ...Instrument.DEFAULTS };
     this.generation = 0; this.starting = false;
   }
   async ready() {
@@ -19,7 +19,7 @@ class Instrument extends EventTarget {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) throw new Error('This browser does not support Web Audio.');
       const ctx = this.context = new AudioContext();
-      this.master = ctx.createGain(); this.master.gain.value = this.volume / 100 * .6;
+      this.master = ctx.createGain(); this.master.gain.value = this.muted ? 0 : this.volume / 100 * .6;
       this.compressor = ctx.createDynamicsCompressor();
       this.compressor.threshold.value = -18; this.compressor.ratio.value = 5;
       this.analyser = ctx.createAnalyser(); this.analyser.fftSize = 256;
@@ -29,9 +29,10 @@ class Instrument extends EventTarget {
       const wet = ctx.createGain(); wet.gain.value = .17;
       this.delay.connect(feedback).connect(this.delay);
       this.delay.connect(wet).connect(this.master);
-      this.vibrato = ctx.createOscillator(); this.vibrato.frequency.value = 2.2;
-      this.vibratoDepth = ctx.createGain(); this.vibratoDepth.gain.value = 1.8;
+      this.vibrato = ctx.createOscillator(); this.vibrato.frequency.value = this.synth.vibratoRate;
+      this.vibratoDepth = ctx.createGain(); this.vibratoDepth.gain.value = this.synth.vibratoDepth;
       this.vibrato.connect(this.vibratoDepth); this.vibrato.start();
+      this.rebuildWave();
       ctx.addEventListener('statechange', () => {
         if (ctx.state !== 'running' && this.playing) this.stop();
       });
@@ -100,41 +101,55 @@ class Instrument extends EventTarget {
     }
   }
   note(midi, when, duration, velocity, source = 'arp') {
-    const ctx = this.context, f = this.flower;
-    const count = clamp(Math.round((f.petals - 5) / 4) + 1, 1, 4);
+    const ctx = this.context, s = this.synth;
+    // Keep long releases and high tempos bounded on mobile devices.
+    if (this.voices.size >= 24) {
+      const oldest = this.voices.values().next().value;
+      oldest.oscillators.forEach(osc => osc.stop(ctx.currentTime));
+      this.voices.delete(oldest);
+    }
+    const count = s.voices;
     const gain = ctx.createGain(), filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass'; filter.frequency.value = this.cutoff(); filter.Q.value = .5 + f.curl / 100 * 1.8;
-    gain.connect(filter); filter.connect(this.master); filter.connect(this.delay);
-    const attack = .006 + (f.petalLength - .65) * .026;
-    const decay = .06 + f.height * .045;
-    const release = .13 + f.height * .08;
+    filter.type = 'lowpass'; filter.frequency.value = s.cutoff; filter.Q.value = .3 + s.resonance / 10;
+    filter.connect(gain); gain.connect(this.master); gain.connect(this.delay);
     const peak = velocity * .2;
-    const sustain = peak * (.12 + f.leafLength * .15);
-    const off = when + Math.max(attack + .005, duration);
-    gain.gain.setValueAtTime(0, when);
-    gain.gain.linearRampToValueAtTime(peak, when + attack);
-    const decayEnd = Math.min(when + attack + decay, off);
-    gain.gain.exponentialRampToValueAtTime(Math.max(.0001, sustain), decayEnd);
-    gain.gain.setValueAtTime(Math.max(.0001, sustain), off);
-    gain.gain.exponentialRampToValueAtTime(.0001, off + release);
+    const off = when + Math.max(.005, duration);
     const oscillators = [], mixers = [];
-    const voice = { gain, filter, oscillators, mixers, source, stopped: false };
+    const voice = {
+      gain, filter, oscillators, mixers, source, stopped: false, peak,
+      t: when, off, a: s.attack, d: s.decay, s: s.sustain, r: s.release,
+    };
+    voice.releaseFrom = Instrument.attackDecayLevel(off - when, voice);
+    gain.gain.setValueAtTime(0, when);
+    // A short gate releases from the actual partial attack/decay level.
+    if (off < when + voice.a) {
+      gain.gain.linearRampToValueAtTime(peak * voice.releaseFrom, off);
+    } else {
+      gain.gain.linearRampToValueAtTime(peak, when + voice.a);
+      if (off < when + voice.a + voice.d) {
+        gain.gain.linearRampToValueAtTime(peak * voice.releaseFrom, off);
+      } else {
+        gain.gain.linearRampToValueAtTime(peak * voice.s, when + voice.a + voice.d);
+        gain.gain.setValueAtTime(peak * voice.s, off);
+      }
+    }
+    gain.gain.linearRampToValueAtTime(0, off + voice.r);
     for (let i = 0; i < count; i++) {
       const osc = ctx.createOscillator(), mix = ctx.createGain();
       const position = count === 1 ? 0 : i * 2 / (count - 1) - 1;
-      osc.type = i % 2 ? 'triangle' : 'sawtooth';
+      osc.setPeriodicWave(this.periodicWave);
       osc.frequency.value = 440 * 2 ** ((midi - 69) / 12);
-      osc.detune.value = position * f.curl / 100 * 18;
+      osc.detune.value = position * s.detune;
       osc._position = position;
-      mix.gain.value = .65 / count;
+      mix.gain.value = .65 / Math.sqrt(count);
       this.vibratoDepth.connect(osc.detune);
-      osc.connect(mix).connect(gain); osc.start(when); osc.stop(off + release + .03);
+      osc.connect(mix).connect(filter); osc.start(when); osc.stop(off + voice.r + .03);
       oscillators.push(osc); mixers.push(mix);
     }
     const sub = ctx.createOscillator(), subMix = ctx.createGain();
     sub.type = 'sine'; sub.frequency.value = 440 * 2 ** ((midi - 81) / 12);
-    subMix.gain.value = f.leafCount * .018;
-    sub.connect(subMix).connect(gain); sub.start(when); sub.stop(off + release + .03);
+    subMix.gain.value = s.sub / 100 * .18;
+    sub.connect(subMix).connect(filter); sub.start(when); sub.stop(off + voice.r + .03);
     oscillators.push(sub); mixers.push(subMix);
     this.voices.add(voice);
     sub.onended = () => {
@@ -153,31 +168,68 @@ class Instrument extends EventTarget {
       if ((source && voice.source !== source) || voice.stopped) continue;
       voice.stopped = true;
       voice.gain.gain.cancelScheduledValues(now);
-      voice.gain.gain.setTargetAtTime(.0001, now, .008);
+      voice.gain.gain.setValueAtTime(voice.peak * Instrument.envelopeLevel(voice, now), now);
+      voice.gain.gain.linearRampToValueAtTime(0, now + .025);
       voice.oscillators.forEach(osc => osc.stop(now + .045));
     }
   }
-  async audition(chord) {
+  async audition(chord, duration = .65) {
     const generation = this.auditionGeneration = (this.auditionGeneration || 0) + 1;
     await this.ready();
     if (generation !== this.auditionGeneration) return;
     this.silence('audition');
-    chordNotes(chord).forEach(midi => this.note(midi, this.context.currentTime + .01, .65, .65, 'audition'));
+    chordNotes(chord).forEach(midi => this.note(midi, this.context.currentTime + .01, duration, .65, 'audition'));
   }
-  cutoff() { return 180 + (this.flower.bloom / 100) ** 2 * 10000; }
-  setFlower(state) {
-    Object.assign(this.flower, state);
+  rebuildWave() {
     if (!this.context) return;
-    const now = this.context.currentTime;
-    this.vibratoDepth.gain.setTargetAtTime(this.flower.sway / 100 * 6, now, .04);
-    this.vibrato.frequency.setTargetAtTime(.7 + this.flower.spin / 100 * 5, now, .04);
-    for (const voice of this.voices) {
-      voice.filter.frequency.setTargetAtTime(this.cutoff(), now, .03);
-      voice.filter.Q.setTargetAtTime(.5 + this.flower.curl / 100 * 1.8, now, .03);
-      voice.oscillators.forEach(osc => {
-        if (osc._position !== undefined) osc.detune.setTargetAtTime(osc._position * this.flower.curl / 100 * 18, now, .02);
-      });
+    const real = new Float32Array(65), imag = new Float32Array(65);
+    const { wave, morph } = this.synth, mix = morph / 100;
+    for (let n = 1; n < imag.length; n++) {
+      let harmonic = 0;
+      if (wave === 'sine') harmonic = n === 1 ? 1 : 0;
+      if (wave === 'sawtooth') harmonic = (n % 2 ? 1 : -1) / n;
+      if (wave === 'square') harmonic = n % 2 ? 1 / n : 0;
+      if (wave === 'triangle') harmonic = n % 2 ? (-1) ** ((n - 1) / 2) / (n * n) : 0;
+      imag[n] = harmonic * (1 - mix) + (n === 1 ? mix : 0);
     }
+    this.periodicWave = this.context.createPeriodicWave(real, imag);
+    for (const voice of this.voices) {
+      voice.oscillators.forEach(osc => { if (osc._position !== undefined) osc.setPeriodicWave(this.periodicWave); });
+    }
+  }
+  setSynth(patch) {
+    Object.assign(this.synth, patch);
+    if (this.context) {
+      const now = this.context.currentTime, s = this.synth;
+      if ('wave' in patch || 'morph' in patch) this.rebuildWave();
+      this.vibratoDepth.gain.setTargetAtTime(s.vibratoDepth, now, .04);
+      this.vibrato.frequency.setTargetAtTime(s.vibratoRate, now, .04);
+      for (const voice of this.voices) {
+        voice.filter.frequency.setTargetAtTime(s.cutoff, now, .03);
+        voice.filter.Q.setTargetAtTime(.3 + s.resonance / 10, now, .03);
+        voice.oscillators.forEach(osc => {
+          if (osc._position !== undefined) osc.detune.setTargetAtTime(osc._position * s.detune, now, .02);
+        });
+        voice.mixers.at(-1).gain.setTargetAtTime(s.sub / 100 * .18, now, .02);
+      }
+    }
+    this.emit('synth', { ...this.synth });
+  }
+  envelopeActivity() {
+    if (!this.context) return null;
+    const now = this.context.currentTime;
+    let active;
+    for (const voice of this.voices) {
+      if (!voice.stopped && voice.t <= now && now < voice.off + voice.r) active = voice;
+    }
+    if (!active) return null;
+    const elapsed = now - active.t;
+    let phase, progress;
+    if (now >= active.off) { phase = 'release'; progress = (now - active.off) / active.r; }
+    else if (elapsed < active.a) { phase = 'attack'; progress = elapsed / active.a; }
+    else if (elapsed < active.a + active.d) { phase = 'decay'; progress = (elapsed - active.a) / active.d; }
+    else { phase = 'sustain'; progress = .5; }
+    return { phase, progress, level: Instrument.envelopeLevel(active, now) };
   }
   setVolume() {
     this.master?.gain.setTargetAtTime(this.muted ? 0 : this.volume / 100 * .6, this.context.currentTime, .025);
@@ -190,5 +242,19 @@ class Instrument extends EventTarget {
   }
 }
 
+Instrument.DEFAULTS = Object.freeze({
+  wave: 'sawtooth', voices: 7, detune: 4, morph: 20, sub: 12,
+  cutoff: 3240, resonance: 12, vibratoDepth: 1.8, vibratoRate: 1.2,
+  attack: .005, decay: .24, sustain: .08, release: .42,
+});
+Instrument.attackDecayLevel = (elapsed, voice) => {
+  if (elapsed <= 0) return 0;
+  if (elapsed < voice.a) return elapsed / voice.a;
+  if (elapsed < voice.a + voice.d) return 1 + (voice.s - 1) * (elapsed - voice.a) / voice.d;
+  return voice.s;
+};
+Instrument.envelopeLevel = (voice, time) => time >= voice.off
+  ? voice.releaseFrom * Math.max(0, 1 - (time - voice.off) / voice.r)
+  : Instrument.attackDecayLevel(time - voice.t, voice);
 window.FluraInstrument = Instrument;
 })();

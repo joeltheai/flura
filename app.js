@@ -22,6 +22,7 @@ const attempt = async action => {
 
 // Native scroll snapping preserves momentum, swiping, and independent vertical scroll.
 const carousel = $('.carousel');
+const viewCount = $$('.view').length;
 function syncView(index) {
   currentView = index;
   $$('[data-view]').forEach(button => {
@@ -30,10 +31,10 @@ function syncView(index) {
   });
   $$('.view').forEach((view, i) => { view.inert = i !== index; });
   $('#previous-view').disabled = index === 0;
-  $('#next-view').disabled = index === 2;
+  $('#next-view').disabled = index === viewCount - 1;
 }
 function goTo(index) {
-  index = clamp(index, 0, 2);
+  index = clamp(index, 0, viewCount - 1);
   carousel.scrollTo({ left: index * carousel.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
 }
 $$('[data-view]').forEach(button => button.addEventListener('click', () => goTo(+button.dataset.view)));
@@ -64,10 +65,10 @@ $('.view-tabs').addEventListener('keydown', event => {
   const index = +event.target.dataset.view;
   if (!Number.isFinite(index)) return;
   let next;
-  if (event.key === 'ArrowRight') next = (index + 1) % 3;
-  if (event.key === 'ArrowLeft') next = (index + 2) % 3;
+  if (event.key === 'ArrowRight') next = (index + 1) % viewCount;
+  if (event.key === 'ArrowLeft') next = (index + viewCount - 1) % viewCount;
   if (event.key === 'Home') next = 0;
-  if (event.key === 'End') next = 2;
+  if (event.key === 'End') next = viewCount - 1;
   if (next !== undefined) { event.preventDefault(); goTo(next); $(`.view-tabs [data-view="${next}"]`).focus(); }
 });
 
@@ -324,8 +325,8 @@ $('#mute').addEventListener('click', () => {
   $('#mute').setAttribute('aria-pressed', String(instrument.muted));
   $('#mute').setAttribute('aria-label', instrument.muted ? 'Unmute' : 'Mute');
 });
-window.addEventListener('flura:flower', event => instrument.setFlower(event.detail));
-if (window.flowerSnapshot) instrument.setFlower(window.flowerSnapshot().state);
+const synthControls = window.FluraSynthControls(instrument);
+$('#audition-envelope').addEventListener('click', () => attempt(() => instrument.audition(displayedChord, Math.max(1.2, instrument.synth.attack + instrument.synth.decay + .5))));
 function updatePlayhead() {
   const index = lastStep < 0 || instrument.bypass ? -1 : laneIndex(lanes[selectedLane], lastStep);
   $$('#step-graph .step-cell, #step-mutes button').forEach(cell => cell.classList.toggle('playing', +cell.dataset.step === index));
@@ -344,6 +345,7 @@ instrument.addEventListener('playback', ({ detail: playing }) => {
 const scope = $('#scope'), scopeContext = scope.getContext('2d'), samples = new Uint8Array(256);
 function frame() {
   instrument.updateVisuals();
+  synthControls.updateActivity(currentView === 3);
   scopeContext.clearRect(0, 0, scope.width, scope.height);
   scopeContext.beginPath(); scopeContext.strokeStyle = '#bbb'; scopeContext.lineWidth = 1.5;
   if (instrument.analyser) instrument.analyser.getByteTimeDomainData(samples); else samples.fill(128);
@@ -354,6 +356,6 @@ function frame() {
   scopeContext.stroke(); requestAnimationFrame(frame);
 }
 renderChord(); renderLane(); renderProgression(); requestAnimationFrame(frame);
-window.fluraSnapshot = () => ({ playing:instrument.playing, audioState:instrument.context?.state ?? 'uninitialized', bpm:instrument.bpm, rate:instrument.rate, swing:instrument.swing, bypass:instrument.bypass, muted:instrument.muted, volume:instrument.volume, voices:instrument.voices.size, selectedView:currentView, chord:{...chord}, progression:progression.map(c => ({...c})), looping:instrument.progression.length === 4, capturing, selectedLane, linked, lanes:structuredClone(lanes), lastStep, flower:window.flowerSnapshot?.() });
+window.fluraSnapshot = () => ({ playing:instrument.playing, audioState:instrument.context?.state ?? 'uninitialized', bpm:instrument.bpm, rate:instrument.rate, swing:instrument.swing, bypass:instrument.bypass, muted:instrument.muted, volume:instrument.volume, voices:instrument.voices.size, selectedView:currentView, chord:{...chord}, progression:progression.map(c => ({...c})), looping:instrument.progression.length === 4, capturing, selectedLane, linked, lanes:structuredClone(lanes), lastStep, synth:{...instrument.synth}, envelope:instrument.envelopeActivity(), flower:window.flowerSnapshot?.() });
 window.addEventListener('pagehide', () => instrument.stop());
 })();

@@ -111,6 +111,25 @@ input[type=range]::-moz-range-thumb { width: 6px; height: 6px; border: 0; border
 .control output { font-size: 9px; color: #666; font-variant-numeric: tabular-nums; }
 .control input { grid-column: 1 / -1; }
 .flower-actions { display: flex; justify-content: space-between; border-top: 1px solid #222; padding-top: 5px; }
+.waves { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0 12px; }
+.waves button { height: 36px; display: grid; place-items: center; color: #555; border-color: #222; }
+.waves button[aria-pressed=true] { border-color: #888; color: #ddd; }
+.waves svg { width: 28px; height: 17px; }
+#envelope { display: block; width: 100%; overflow: visible; margin: 16px 0 25px; }
+.env-grid path { fill: none; stroke: #1e1e1e; stroke-width: .6; }
+#env-guides path { fill: none; stroke: #333; stroke-width: .7; stroke-dasharray: 2 4; }
+#env-area { fill: #ffffff06; stroke: none; }
+#env-line { fill: none; stroke: #ddd; stroke-width: 1.3; stroke-linejoin: round; }
+.env-point { cursor: grab; touch-action: none; }
+.env-point:active { cursor: grabbing; }
+.env-hit { fill: transparent; stroke: none; pointer-events: all; }
+.env-dot { fill: #020202; stroke: #ddd; stroke-width: 1.3; pointer-events: none; }
+.env-point:focus { outline: none; }
+.env-point:focus-visible .env-dot { fill: #fff; stroke-width: 2; }
+#env-labels text { fill: #666; font-size: 10px; text-anchor: middle; }
+#env-playhead { fill: none; stroke: #777; stroke-width: .8; stroke-dasharray: 2 3; pointer-events: none; }
+#env-activity { fill: #fff; stroke: #020202; stroke-width: 1; pointer-events: none; }
+.envelope-actions { display: flex; justify-content: space-between; border-top: 1px solid #222; padding-top: 7px; }
 .carousel-wayfinding { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 4px 0 max(15px, env(safe-area-inset-bottom)); }
 .carousel-wayfinding > button { border: 0; width: 30px; height: 30px; font-size: 15px; color: #777; }
 .carousel-dots { display: flex; gap: 8px; }
@@ -148,6 +167,7 @@ input[type=range]::-moz-range-thumb { width: 6px; height: 6px; border: 0; border
   select { height: 44px; font-size: 16px; }
   .arp-topline { grid-template-columns: minmax(0, 1fr) 78px 44px 44px; gap: 4px; }
   .lane-tabs button, .step-mutes button { min-height: 44px; }
+  .waves button { height: 44px; }
   .arp-settings { grid-template-columns: 1fr 78px; }
   .progression-section { flex-wrap: wrap; }
   #capture, #loop-progression, #clear-progression { width: 44px; height: 44px; flex-basis: 44px; }

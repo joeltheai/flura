@@ -104,125 +104,36 @@
     sway: 30,
     spin: 10,
   });
-  const sections = [
-    {
-      title: "Bloom",
-      controls: [
-        ["bloom", "Bloom", 0, 100, 1, "%"],
-        ["petals", "Petals", 5, 16, 1, ""],
-        ["petalLength", "Length", 0.65, 1.9, 0.01, "×", "Petal length"],
-        ["curl", "Curl", 0, 100, 1, "%", "Petal curl"],
-      ],
-    },
-    {
-      title: "Stem & leaves",
-      controls: [
-        ["height", "Height", 2, 4.7, 0.01, "×", "Stem height"],
-        ["bend", "Bend", -65, 65, 1, "%", "Stem bend"],
-        ["leafLength", "Leaf", 0.3, 2, 0.01, "×", "Leaf length"],
-        ["leafCount", "Leaves", 0, 6, 1, ""],
-      ],
-    },
-    {
-      title: "Motion",
-      controls: [
-        ["sway", "Sway", 0, 100, 1, "%"],
-        ["spin", "Spin", 0, 100, 1, "%", "Slow spin"],
-      ],
-    },
-  ];
-  const palette = {
-    name: "Monochrome",
-    petals: ["#c8c8c8", "#dddddd", "#b8b8b8"],
-    center: "#999999",
-    seed: "#333333",
-    leaf: "#888888",
-    stem: "#aaaaaa",
-  };
-
   const state = { ...DEFAULTS };
   const current = { ...DEFAULTS };
-  const inputs = new Map();
-  const outputs = new Map();
-  const sliderContainer = document.querySelector("#slider-controls");
   const announcement = document.querySelector("#announcement");
 
-  function publishState() {
-    window.dispatchEvent(new CustomEvent("flura:flower", { detail: { ...state } }));
-  }
-
-  function syncControl(key, value) {
-    const input = inputs.get(key);
-    input.value = value;
-    const progress =
-      (value - Number(input.min)) / (Number(input.max) - Number(input.min));
-    input.style.setProperty("--fill", `${progress * 100}%`);
-    const unit = input.dataset.unit;
-    outputs.get(key).value =
-      `${unit === "×" ? Number(value).toFixed(2) : Math.round(value)}${unit}`;
-    publishState();
-  }
-
-  sections.forEach((section) => {
-    const group = document.createElement("section");
-    group.className = "control-section";
-    group.setAttribute("aria-label", section.title);
-    section.controls.forEach(
-      ([key, label, min, max, step, unit, full = label]) => {
-        const row = document.createElement("div");
-        row.className = "control";
-        row.innerHTML = `<label for="${key}">${label}</label><output for="${key}"></output><input type="range" id="${key}" min="${min}" max="${max}" step="${step}" data-unit="${unit}" aria-label="${full}" title="Double-click to reset" />`;
-        const input = row.querySelector("input");
-        inputs.set(key, input);
-        outputs.set(key, row.querySelector("output"));
-        input.addEventListener("input", () => {
-          state[key] = Number(input.value);
-          syncControl(key, state[key]);
-        });
-        input.addEventListener("dblclick", () => {
-          state[key] = DEFAULTS[key];
-          syncControl(key, state[key]);
-        });
-        syncControl(key, state[key]);
-        group.append(row);
-      },
-    );
-    sliderContainer.append(group);
+  // The flower visualizes the synth; the controls retain their audio meanings.
+  window.addEventListener("flura:synth", ({ detail: sound }) => {
+    state.bloom = 22 + Math.log(sound.cutoff / 70) / Math.log(18000 / 70) * 78;
+    state.petals = Math.round(5 + (sound.voices - 1) / 6 * 11);
+    state.curl = sound.morph;
+    state.bend = sound.detune / 50 * 45;
+    state.height = 2.5 + sound.sub / 100 * 1.8;
+    state.petalLength = 1.05 + Math.sqrt(sound.attack / 2) * .6;
+    state.leafLength = .65 + sound.sustain * 1.1;
+    state.leafCount = 2 + Math.round(sound.resonance / 100 * 3);
   });
 
-  let materials;
-
-  document.querySelector("#reset").addEventListener("click", () => {
-    Object.assign(state, DEFAULTS);
-    for (const key of Object.keys(state)) syncControl(key, state[key]);
-    announcement.textContent = "Flower reset.";
-  });
-  document.querySelector("#randomize").addEventListener("click", () => {
-    const ranges = {
-      bloom: [35, 100],
-      petals: [6, 13],
-      petalLength: [0.9, 1.65],
-      curl: [10, 85],
-      height: [2.5, 4.3],
-      bend: [-50, 50],
-      leafLength: [0.6, 1.8],
-      leafCount: [1, 5],
-      sway: [15, 65],
-      spin: [0, 12],
-    };
-    for (const [key, min, max, step] of sections
-      .flatMap((section) => section.controls)
-      .map(([key, , min, max, step]) => [key, min, max, step])) {
-      const [low, high] = ranges[key] ?? [min, max];
-      state[key] = Number(
-        (Math.round((low + Math.random() * (high - low)) / step) * step).toFixed(
-          2,
-        ),
-      );
-      syncControl(key, state[key]);
+  // Follow only the perimeter of a surface, without its triangulation.
+  function contourGeometry(geometry, rows, columns) {
+    const points = [];
+    const positions = geometry.getAttribute("position");
+    for (let row = 0; row <= rows; row++) {
+      const index = row * (columns + 1);
+      points.push(new THREE.Vector3().fromBufferAttribute(positions, index));
     }
-    announcement.textContent = "Flower randomized.";
-  });
+    for (let row = rows; row >= 0; row--) {
+      const index = row * (columns + 1) + columns;
+      points.push(new THREE.Vector3().fromBufferAttribute(positions, index));
+    }
+    return new THREE.BufferGeometry().setFromPoints(points);
+  }
 
   // Leaves and sepals have a softly ridged face, an underside, and an edge.
   function createLeafGeometry() {
@@ -331,36 +242,17 @@
     document
       .querySelector("#reset-view")
       .addEventListener("click", () => controls.reset());
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x555555, 2.6));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
-    keyLight.position.set(-3, 7, 5);
-    scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
-    fillLight.position.set(5, 1, -3);
-    scene.add(fillLight);
+    // Black surfaces hide rear contours; only white perimeter lines are visible.
+    const surface = new THREE.MeshBasicMaterial({
+      color: 0x020202,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    });
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xdddddd });
+    const materials = { petals: [surface, surface, surface], center: surface, leaf: surface, stem: surface };
 
-    // A three-step lighting ramp gives flat blocks of color rather than glossy highlights.
-    const gradient = new THREE.DataTexture(
-      new Uint8Array([105, 190, 255]),
-      3,
-      1,
-      THREE.RedFormat,
-    );
-    gradient.minFilter = gradient.magFilter = THREE.NearestFilter;
-    gradient.needsUpdate = true;
-    const material = (color) =>
-      new THREE.MeshToonMaterial({
-        color,
-        gradientMap: gradient,
-        side: THREE.DoubleSide,
-      });
-    materials = {
-      petals: palette.petals.map(material),
-      center: material(palette.center),
-      seed: material(palette.seed),
-      leaf: material(palette.leaf),
-      stem: material(palette.stem),
-    };
     const flower = new THREE.Group();
     scene.add(flower);
     const bloom = new THREE.Group();
@@ -375,8 +267,10 @@
       length: current.petalLength,
       curl: current.curl / 100,
     });
+    let petalContour = contourGeometry(petalGeometry, 32, 10);
     const leafGeometry = createLeafGeometry();
-    const sepalGeometry = createLeafGeometry();
+    const leafContour = contourGeometry(leafGeometry, 14, 10);
+    const sepalGeometry = leafGeometry;
     const petals = [];
     const leaves = [];
     let previousPetalCount = -1;
@@ -391,6 +285,12 @@
     );
     center.scale.set(1, 0.46, 1);
     center.position.y = 0.045;
+    const centerPoints = Array.from({ length: 64 }, (_, i) => {
+      const angle = i / 64 * Math.PI * 2;
+      return new THREE.Vector3(Math.cos(angle) * .32, .01, Math.sin(angle) * .32);
+    });
+    const centerContour = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(centerPoints), lineMaterial);
+    center.add(centerContour);
     bloom.add(center);
     const calyx = new THREE.Mesh(
       new THREE.SphereGeometry(0.22, 16, 12),
@@ -403,33 +303,13 @@
       const pivot = new THREE.Group();
       pivot.rotation.y = (i * Math.PI * 2) / 5;
       const sepal = new THREE.Mesh(sepalGeometry, materials.leaf);
+      sepal.add(new THREE.LineLoop(leafContour, lineMaterial));
       sepal.scale.set(0.75, 0.8, 0.55);
       sepal.rotation.x = 0.3;
       pivot.position.y = -0.12;
       pivot.add(sepal);
       bloom.add(pivot);
     }
-    // Deterministic golden-angle seed pattern; no random flicker when reshaping.
-    const seeds = new THREE.InstancedMesh(
-      new THREE.SphereGeometry(0.022, 7, 5),
-      materials.seed,
-      85,
-    );
-    const seedPose = new THREE.Object3D();
-    for (let i = 0; i < 85; i++) {
-      const radius = 0.285 * Math.sqrt((i + 0.5) / 85);
-      const angle = i * Math.PI * (3 - Math.sqrt(5));
-      seedPose.position.set(
-        Math.cos(angle) * radius,
-        0.05 + 0.146 * Math.sqrt(1 - (radius / 0.32) ** 2),
-        Math.sin(angle) * radius,
-      );
-      seedPose.scale.set(0.8, 1.2, 0.8);
-      seedPose.updateMatrix();
-      seeds.setMatrixAt(i, seedPose.matrix);
-    }
-    bloom.add(seeds);
-
     function rebuildPetals(count) {
       petalGroup.clear();
       petals.length = 0;
@@ -437,6 +317,9 @@
         const pivot = new THREE.Group();
         pivot.rotation.y = i / count * Math.PI * 2;
         const petal = new THREE.Mesh(petalGeometry, materials.petals[i % 3]);
+        const outline = new THREE.LineLoop(petalContour, lineMaterial);
+        petal.add(outline);
+        petal.userData.outline = outline;
         pivot.add(petal);
         petalGroup.add(pivot);
         petals.push({ pivot, petal });
@@ -449,6 +332,7 @@
       for (let i = 0; i < count; i++) {
         const pivot = new THREE.Group();
         const leaf = new THREE.Mesh(leafGeometry, materials.leaf);
+        leaf.add(new THREE.LineLoop(leafContour, lineMaterial));
         pivot.add(leaf);
         leafGroup.add(pivot);
         leaves.push({
@@ -481,13 +365,18 @@
           length: current.petalLength,
           curl: current.curl / 100,
         });
-        petals.forEach(({ petal }) => { petal.geometry = petalGeometry; });
+        const oldContour = petalContour;
+        petalContour = contourGeometry(petalGeometry, 32, 10);
+        petals.forEach(({ petal }) => {
+          petal.geometry = petalGeometry;
+          petal.userData.outline.geometry = petalContour;
+        });
         oldGeometry.dispose();
+        oldContour.dispose();
       }
 
       const centerWidth = 0.3 + open * 0.7;
       center.scale.set(centerWidth, 0.46, centerWidth);
-      seeds.scale.set(centerWidth, 0.6 + open * 0.4, centerWidth);
       const bend = current.bend / 100;
       const height = current.height;
       const bottom = -1.95;
@@ -500,12 +389,12 @@
       const stemKey = `${height.toFixed(4)},${bend.toFixed(4)}`;
       if (previousStem !== stemKey) {
         previousStem = stemKey;
-        const geometry = new THREE.TubeGeometry(curve, 40, 0.042, 8, false);
+        const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(40));
         if (stem) {
           stem.geometry.dispose();
           stem.geometry = geometry;
         } else {
-          stem = new THREE.Mesh(geometry, materials.stem);
+          stem = new THREE.Line(geometry, lineMaterial);
           flower.add(stem);
         }
       }
@@ -606,7 +495,7 @@
     // Expose a small read-only snapshot for diagnostics without exposing scene internals.
     window.flowerSnapshot = () => ({
       state: { ...state },
-      palette: palette.name,
+      renderStyle: "outline",
       petals: petals.length,
       leaves: leaves.length,
       motion,
