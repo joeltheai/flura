@@ -108,11 +108,6 @@ function renderChord(config = chord) {
   $('#chord-name').textContent = NOTE_NAMES[config.root] + (config.minor && config.extension !== 'sus' ? 'm' : '');
   $('#chord-quality').textContent = { triad: config.minor ? 'minor' : 'major', seventh:config.minor ? '7' : 'maj7', ninth:'add9', sus:'sus4' }[config.extension];
   $('#extension').value = config.extension; $('#voicing').value = config.inversion;
-  const pattern = $('#pattern').selectedOptions[0].textContent.toLowerCase();
-  $('#playing-chord').replaceChildren(document.createTextNode(chordLabel(config) + ' '));
-  const detail = document.createElement('span');
-  detail.textContent = `· ${instrument.bypass ? 'held chord' : pattern}`;
-  $('#playing-chord').append(detail);
   $('#audition').setAttribute('aria-label', `Audition ${chordLabel(config)}`);
 }
 function chooseChord(root, minor) {
@@ -150,7 +145,7 @@ $('#audition').addEventListener('click', audition);
   if (!instrument.playing) audition(); else if (instrument.bypass) instrument.restart();
 }));
 const loopButton = document.createElement('button');
-loopButton.id = 'loop-progression'; loopButton.type = 'button'; loopButton.textContent = '↻ Loop'; loopButton.hidden = true;
+loopButton.id = 'loop-progression'; loopButton.type = 'button'; loopButton.textContent = '↻'; loopButton.setAttribute('aria-label', 'Loop chord progression'); loopButton.title = 'Loop chord progression'; loopButton.hidden = true;
 loopButton.setAttribute('aria-pressed', 'false');
 $('#clear-progression').before(loopButton);
 loopButton.addEventListener('click', () => {
@@ -164,19 +159,18 @@ loopButton.addEventListener('click', () => {
 });
 function renderProgression(active = -1) {
   $('#capture').setAttribute('aria-pressed', String(capturing));
-  $('#capture span').textContent = capturing ? `${progression.length} / 4 · Cancel` : 'Record 4';
+  $('#capture').setAttribute('aria-label', capturing ? `Cancel capture, ${progression.length} of 4 chords recorded` : 'Capture four chords');
   $$('[data-slot]').forEach((slot, i) => {
     const config = progression[i];
     slot.classList.toggle('filled', !!config);
     slot.classList.toggle('active', i === active && instrument.progression.length === 4);
     slot.classList.toggle('record-next', capturing && i === progression.length);
-    slot.querySelector('strong').textContent = config ? chordLabel(config) : '＋';
+    slot.querySelector('strong').textContent = config ? chordLabel(config) : '·';
     slot.setAttribute('aria-label', config ? `Progression slot ${i + 1}, ${chordLabel(config)}` : `Progression slot ${i + 1}, empty`);
   });
   $('#clear-progression').hidden = !progression.length || capturing;
   loopButton.hidden = progression.length !== 4 || capturing;
   loopButton.setAttribute('aria-pressed', String(instrument.progression.length === 4));
-  $('#progression-hint').textContent = capturing ? 'Tap the wheel to plant your next chord.' : instrument.progression.length ? 'One chord, every four beats.' : progression.length === 4 ? 'Your progression is saved for this session.' : 'Record four chords to make them loop.';
 }
 function beginCapture() {
   if (capturing) { progression = captureBackup; capturing = false; announce('Recording cancelled.'); }
@@ -207,8 +201,6 @@ function renderLane() {
     button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1;
   });
   $('#lane-panel').setAttribute('aria-labelledby', `tab-${selectedLane}`);
-  $('#lane-description').textContent = lane.description;
-  $('#lane-range').textContent = `${lane.min} — ${lane.max}`;
   $('#step-graph').replaceChildren(); $('#step-mutes').replaceChildren();
   for (let i = 0; i < lane.length; i++) {
     const cell = document.createElement('div');
@@ -235,7 +227,7 @@ function renderLane() {
     $('#step-mutes').append(mute); syncCell(i);
   }
   $('#lane-length').value = lane.length; $('#length-out').value = lane.length;
-  $('#lane-division').value = lane.division; $('#step-count').textContent = `${lane.length} steps`;
+  $('#lane-division').value = lane.division;
   $('#lane-length').setAttribute('aria-label', `${lane.name} lane length`);
   updateRange($('#lane-length')); updatePlayhead();
 }
@@ -288,7 +280,7 @@ $('#lane-length').addEventListener('input', event => {
 $('#lane-division').addEventListener('change', event => { lanes[selectedLane].division = +event.target.value; });
 $('#link-lengths').addEventListener('click', () => {
   linked = !linked; $('#link-lengths').setAttribute('aria-pressed', String(linked));
-  $('#link-lengths span').textContent = linked ? 'Linked' : 'Unlinked';
+  $('#link-lengths').title = linked ? 'Unlink lane lengths' : 'Link lane lengths';
   if (linked) Object.values(lanes).forEach(lane => { lane.length = lanes[selectedLane].length; });
 });
 $('#randomize-lane').addEventListener('click', () => {
@@ -346,18 +338,14 @@ instrument.addEventListener('step', ({ detail }) => {
 instrument.addEventListener('playback', ({ detail: playing }) => {
   $('#play').setAttribute('aria-pressed', String(playing)); $('#play').setAttribute('aria-label', playing ? 'Stop' : 'Play');
   $('#play-icon').setAttribute('d', playing ? 'M7 5h4v14H7ZM14 5h4v14h-4Z' : 'm9 5 11 7-11 7Z');
-  $('#play-status').textContent = playing ? 'A little sound, growing' : 'Ready when you are';
   if (!playing) { lastStep = -1; updatePlayhead(); renderProgression(); }
 });
 
 const scope = $('#scope'), scopeContext = scope.getContext('2d'), samples = new Uint8Array(256);
 function frame() {
   instrument.updateVisuals();
-  const ctx = instrument.context;
-  const beat = instrument.playing ? Math.max(0, Math.floor((ctx.currentTime - instrument.anchor) * instrument.bpm / 60)) % 4 : -1;
-  $$('.beat-dots i').forEach((dot, i) => dot.classList.toggle('active', i === beat));
   scopeContext.clearRect(0, 0, scope.width, scope.height);
-  scopeContext.beginPath(); scopeContext.strokeStyle = '#879577'; scopeContext.lineWidth = 1.5;
+  scopeContext.beginPath(); scopeContext.strokeStyle = '#bbb'; scopeContext.lineWidth = 1.5;
   if (instrument.analyser) instrument.analyser.getByteTimeDomainData(samples); else samples.fill(128);
   for (let i = 0; i < samples.length; i++) {
     const x = i / (samples.length - 1) * scope.width, y = scope.height / 2 + (samples[i] - 128) / 128 * scope.height * 3.4;
