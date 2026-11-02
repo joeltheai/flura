@@ -11,6 +11,7 @@
   font-synthesis: none;
 }
 * { box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body { margin: 0; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
 button, input, select { font: inherit; color: inherit; touch-action: manipulation; }
 button, select { cursor: pointer; }
@@ -38,9 +39,9 @@ button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke
 #mute { width: 26px; height: 30px; border: 0; display: grid; place-items: center; }
 #mute[aria-pressed=true] { color: var(--dim); }
 .volume-control input { width: 48px; }
-.carousel { display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; min-height: 0; outline-offset: -3px; }
+.carousel { display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: none; min-height: 0; outline-offset: -3px; }
 .carousel::-webkit-scrollbar, .view::-webkit-scrollbar { display: none; }
-.view { flex: 0 0 100%; width: 100%; min-width: 0; display: flex; padding: 24px; overflow-y: auto; scroll-snap-align: start; scroll-snap-stop: always; scrollbar-width: none; overscroll-behavior-y: contain; }
+.view { flex: 0 0 100%; width: 100%; min-width: 0; display: flex; padding: 24px; overflow-y: auto; scroll-snap-align: start; scroll-snap-stop: always; scrollbar-width: none; overscroll-behavior-y: none; }
 .instrument { width: 100%; max-width: 380px; flex-shrink: 0; margin: auto; padding: 14px; background: #020202; border: 1px solid #3d3d3d; border-radius: 4px; }
 .wheel-wrap { position: relative; aspect-ratio: 1; margin-bottom: 15px; }
 .wheel-wrap > svg { width: 100%; height: 100%; overflow: visible; }
