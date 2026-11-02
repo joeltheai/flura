@@ -10,16 +10,14 @@
   font-size: 10px;
   font-synthesis: none;
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body { margin: 0; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
 button, input, select { font: inherit; color: inherit; touch-action: manipulation; }
 button, select { cursor: pointer; }
 button { background: transparent; border: 1px solid var(--line); border-radius: 2px; padding: 0; }
-button:hover { border-color: #999; color: #fff; }
 button:disabled { opacity: .25; cursor: default; }
-button, svg { -webkit-user-select: none; user-select: none; }
-button, input, select { -webkit-tap-highlight-color: transparent; }
+button, svg, [role=slider] { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 1px solid #fff; outline-offset: 3px; }
 input, select { background: #000; border: 1px solid var(--line); border-radius: 2px; min-width: 0; }
 select { padding: 5px; color: var(--muted); font-size: 10px; width: 100%; height: 30px; }
@@ -46,8 +44,9 @@ button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke
 .wheel-wrap { position: relative; aspect-ratio: 1; margin-bottom: 15px; }
 .wheel-wrap > svg { width: 100%; height: 100%; overflow: visible; }
 #wheel path { fill: #020202; stroke: #4b4b4b; stroke-width: .8; cursor: pointer; }
-#wheel path:hover { fill: #252525; stroke: #fff; }
+#wheel, #wheel * { touch-action: manipulation; }
 #wheel path[aria-pressed=true] { fill: #ddd; stroke: #fff; }
+#wheel path:focus { outline: none; }
 #wheel path:focus-visible { outline: none; stroke: #fff; stroke-width: 2.5; }
 #wheel text { fill: #aaa; font-size: 15px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 #wheel text.minor { font-size: 12px; }
@@ -132,6 +131,32 @@ input[type=range]::-moz-range-thumb { width: 6px; height: 6px; border: 0; border
 @media (max-height: 700px) {
   .view { padding-top: 12px; padding-bottom: 12px; }
   .stage { height: 225px; }
+}
+@media (hover: hover) and (pointer: fine) {
+  button:hover { border-color: #999; color: #fff; }
+  #wheel path:hover { fill: #252525; stroke: #fff; }
+  #wheel path[aria-pressed=true]:hover { fill: #ddd; }
+}
+@media (pointer: coarse) {
+  .transport { gap: 10px; }
+  #play, #mute, .icon-button,
+  .carousel-wayfinding > button, .carousel-dots button { width: 44px; height: 44px; }
+  #tempo { width: 42px; min-height: 44px; font-size: 16px; }
+  #scope { width: 38px; }
+  .volume-control { width: 100px; }
+  #mute { flex: 0 0 44px; }
+  select { height: 44px; font-size: 16px; }
+  .arp-topline { grid-template-columns: minmax(0, 1fr) 78px 44px 44px; gap: 4px; }
+  .lane-tabs button, .step-mutes button { min-height: 44px; }
+  .arp-settings { grid-template-columns: 1fr 78px; }
+  .progression-section { flex-wrap: wrap; }
+  #capture, #loop-progression, #clear-progression { width: 44px; height: 44px; flex-basis: 44px; }
+  .progression-slots { flex: 1 0 calc(100% - 50px); }
+  .progression-slots button { height: 44px; }
+  input[type=range] { height: 44px; }
+  input[type=range]::-webkit-slider-thumb { width: 12px; height: 12px; margin-top: -5.5px; }
+  input[type=range]::-moz-range-thumb { width: 12px; height: 12px; }
+  .carousel-dots { gap: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
