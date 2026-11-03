@@ -139,9 +139,12 @@ function audition() {
 let displayedChord = chord;
 $('#audition').addEventListener('click', audition);
 ['extension', 'voicing'].forEach(id => $(`#${id}`).addEventListener('change', () => {
-  Object.assign(chord, displayedChord);
-  chord.extension = $('#extension').value; chord.inversion = +$('#voicing').value;
-  instrument.chord = { ...chord }; instrument.progression = [];
+  const extension = $('#extension').value, inversion = +$('#voicing').value;
+  Object.assign(chord, displayedChord, { extension, inversion });
+  instrument.chord = { ...chord };
+  // The mode is global: keep captured and playing progression chords in sync.
+  progression.forEach(config => Object.assign(config, { extension, inversion }));
+  instrument.progression.forEach(config => Object.assign(config, { extension, inversion }));
   renderChord(); renderProgression();
   if (!instrument.playing) audition(); else if (instrument.bypass || instrument.retrigger) instrument.restart();
 }));
