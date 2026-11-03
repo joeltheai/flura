@@ -75,6 +75,7 @@ class Instrument extends EventTarget {
     this.silence('arp'); this.events.length = 0;
     this.anchor = this.context.currentTime + .025; this.nextStep = 0;
     this.lastBar = -1;
+    this.emit('restart');
     this.schedule();
   }
   schedule() {
@@ -109,7 +110,8 @@ class Instrument extends EventTarget {
         }
       }
       this.lastBar = bar;
-      this.events.push({ when, step, bar, chord, midi });
+      // Store the retrigger-adjusted step so the playhead matches the lane position.
+      this.events.push({ when, step: position, bar, chord, midi });
     }
   }
   note(midi, when, duration, velocity, source = 'arp') {

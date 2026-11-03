@@ -340,6 +340,7 @@ instrument.addEventListener('step', ({ detail }) => {
   updatePlayhead();
   if (instrument.progression.length === 4) { renderChord(detail.chord); renderProgression(detail.bar % 4); }
 });
+instrument.addEventListener('restart', () => { lastStep = -1; updatePlayhead(); });
 instrument.addEventListener('playback', ({ detail: playing }) => {
   $('#play').setAttribute('aria-pressed', String(playing)); $('#play').setAttribute('aria-label', playing ? 'Stop' : 'Play');
   $('#play-icon').setAttribute('d', playing ? 'M7 5h4v14H7ZM14 5h4v14h-4Z' : 'm9 5 11 7-11 7Z');
