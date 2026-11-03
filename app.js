@@ -300,8 +300,6 @@ $('#rate').addEventListener('change', event => { instrument.rate = +event.target
 $('#retrigger').addEventListener('click', () => {
   instrument.retrigger = !instrument.retrigger;
   $('#retrigger').setAttribute('aria-pressed', String(instrument.retrigger));
-  $('#retrigger').setAttribute('aria-label', `${instrument.retrigger ? 'Disable' : 'Enable'} retrigger on chord change`);
-  announce(`Retrigger ${instrument.retrigger ? 'on' : 'off'}.`);
 });
 $('#swing').addEventListener('input', event => { instrument.swing = +event.target.value / 100; $('#swing-out').value = `${event.target.value}%`; instrument.restart(); });
 $('#arp-bypass').addEventListener('click', () => {

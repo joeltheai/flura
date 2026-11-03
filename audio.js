@@ -10,7 +10,7 @@ class Instrument extends EventTarget {
     this.chord = { ...chord }; this.lanes = lanes;
     this.bpm = 122; this.rate = .25; this.swing = 0; this.volume = 55;
     this.muted = false; this.bypass = false; this.playing = false;
-    this.retrigger = false; this.phaseBase = 0;
+    this.retrigger = false;
     this.progression = []; this.voices = new Set(); this.events = [];
     this.synth = { ...Instrument.DEFAULTS };
     this.generation = 0; this.starting = false;
@@ -74,7 +74,7 @@ class Instrument extends EventTarget {
     if (!this.playing) return;
     this.silence('arp'); this.events.length = 0;
     this.anchor = this.context.currentTime + .025; this.nextStep = 0;
-    this.lastBar = -1; this.phaseBase = 0;
+    this.lastBar = -1;
     this.schedule();
   }
   schedule() {
@@ -87,9 +87,8 @@ class Instrument extends EventTarget {
     while (time(this.nextStep) < now + .09) {
       const step = this.nextStep++, when = Math.max(now, time(step));
       const bar = barIndex(step, this.rate);
-      // Retrigger restarts the pattern whenever the chord changes.
-      if (this.retrigger && this.progression.length === 4 && bar !== this.lastBar) this.phaseBase = step;
-      const position = this.retrigger ? step - this.phaseBase : step;
+      // Retrigger restarts the pattern on each bar of a chord progression.
+      const position = this.retrigger && this.progression.length === 4 ? step % Math.round(4 / this.rate) : step;
       const chord = this.progression.length === 4 ? this.progression[bar % 4] : this.chord;
       const notes = chordNotes(chord);
       let midi = null;
