@@ -124,7 +124,7 @@ function chooseChord(root, minor) {
     } else announce(`Chord ${progression.length} captured. Choose ${4 - progression.length} more.`);
   } else {
     instrument.progression = [];
-    if (instrument.bypass) instrument.restart();
+    if (instrument.bypass || instrument.retrigger) instrument.restart();
   }
   renderChord(); renderProgression();
   if (!instrument.playing && !instrument.starting) audition();
@@ -143,7 +143,7 @@ $('#audition').addEventListener('click', audition);
   chord.extension = $('#extension').value; chord.inversion = +$('#voicing').value;
   instrument.chord = { ...chord }; instrument.progression = [];
   renderChord(); renderProgression();
-  if (!instrument.playing) audition(); else if (instrument.bypass) instrument.restart();
+  if (!instrument.playing) audition(); else if (instrument.bypass || instrument.retrigger) instrument.restart();
 }));
 const loopButton = document.createElement('button');
 loopButton.id = 'loop-progression'; loopButton.type = 'button'; loopButton.textContent = '↻'; loopButton.setAttribute('aria-label', 'Loop chord progression'); loopButton.title = 'Loop chord progression'; loopButton.hidden = true;
@@ -182,7 +182,7 @@ $('#capture').addEventListener('click', beginCapture);
 $('#clear-progression').addEventListener('click', () => {
   Object.assign(chord, displayedChord); instrument.chord = { ...chord };
   progression = []; instrument.progression = [];
-  if (instrument.bypass) instrument.restart();
+  if (instrument.bypass || instrument.retrigger) instrument.restart();
   renderProgression(); announce('Progression cleared.');
 });
 $$('[data-slot]').forEach(slot => slot.addEventListener('click', () => {
@@ -191,7 +191,7 @@ $$('[data-slot]').forEach(slot => slot.addEventListener('click', () => {
   if (capturing) return;
   Object.assign(chord, config); instrument.chord = { ...config }; instrument.progression = [];
   renderChord(); renderProgression();
-  if (instrument.bypass) instrument.restart();
+  if (instrument.bypass || instrument.retrigger) instrument.restart();
   if (!instrument.playing) audition();
 }));
 
@@ -297,6 +297,12 @@ $('#pattern').addEventListener('change', event => {
   renderLane(); renderChord(displayedChord);
 });
 $('#rate').addEventListener('change', event => { instrument.rate = +event.target.value; instrument.restart(); });
+$('#retrigger').addEventListener('click', () => {
+  instrument.retrigger = !instrument.retrigger;
+  $('#retrigger').setAttribute('aria-pressed', String(instrument.retrigger));
+  $('#retrigger').setAttribute('aria-label', `${instrument.retrigger ? 'Disable' : 'Enable'} retrigger on chord change`);
+  announce(`Retrigger ${instrument.retrigger ? 'on' : 'off'}.`);
+});
 $('#swing').addEventListener('input', event => { instrument.swing = +event.target.value / 100; $('#swing-out').value = `${event.target.value}%`; instrument.restart(); });
 $('#arp-bypass').addEventListener('click', () => {
   instrument.bypass = !instrument.bypass;
@@ -356,6 +362,6 @@ function frame() {
   scopeContext.stroke(); requestAnimationFrame(frame);
 }
 renderChord(); renderLane(); renderProgression(); requestAnimationFrame(frame);
-window.fluraSnapshot = () => ({ playing:instrument.playing, audioState:instrument.context?.state ?? 'uninitialized', bpm:instrument.bpm, rate:instrument.rate, swing:instrument.swing, bypass:instrument.bypass, muted:instrument.muted, volume:instrument.volume, voices:instrument.voices.size, selectedView:currentView, chord:{...chord}, progression:progression.map(c => ({...c})), looping:instrument.progression.length === 4, capturing, selectedLane, linked, lanes:structuredClone(lanes), lastStep, synth:{...instrument.synth}, envelope:instrument.envelopeActivity(), flower:window.flowerSnapshot?.() });
+window.fluraSnapshot = () => ({ playing:instrument.playing, audioState:instrument.context?.state ?? 'uninitialized', bpm:instrument.bpm, rate:instrument.rate, swing:instrument.swing, bypass:instrument.bypass, retrigger:instrument.retrigger, muted:instrument.muted, volume:instrument.volume, voices:instrument.voices.size, selectedView:currentView, chord:{...chord}, progression:progression.map(c => ({...c})), looping:instrument.progression.length === 4, capturing, selectedLane, linked, lanes:structuredClone(lanes), lastStep, synth:{...instrument.synth}, envelope:instrument.envelopeActivity(), flower:window.flowerSnapshot?.() });
 window.addEventListener('pagehide', () => instrument.stop());
 })();
